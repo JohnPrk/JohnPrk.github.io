@@ -1,9 +1,74 @@
-import Image from "next/image";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
+
+const projects = [
+  {
+    name: "패스노트",
+    period: "2025.04 – 2025.11",
+    role: "백엔드 · 인프라 (기여도 95%)",
+    desc:
+      "전자책 구매 · 필기 · 실전 모의고사 · 합격 필기 공유를 하나로 묶은 태블릿 학습 플랫폼. 백엔드 로직 전반과 AWS 인프라 설계/운영을 맡았음.",
+    highlights: [
+      "CloudFront 캐시 적중률 90% · 응답속도 50% 개선",
+      "대용량 업로드 대응 — AWS Lambda + ECR 서버리스 전환",
+      "앱스토어 도서 인기 14위, 평점 5.0 (71개 리뷰)",
+    ],
+    stack: ["Java", "Spring", "AWS(EC2, RDS, CloudFront, Lambda, ECR, S3)"],
+    link: "https://www.passnote.co.kr",
+  },
+  {
+    name: "방탈출 예약 서비스",
+    period: "2024.06 – 2025.01",
+    role: "백엔드 · 인프라 (개인)",
+    desc:
+      "방탈출 테마 검색/예약 MVC 웹앱. 로컬 → AWS 마이그레이션과 테스트 코드 중심의 리팩토링에 집중한 프로젝트.",
+    highlights: [
+      "NAT Gateway → NAT Instance 전환으로 월 AWS 비용 64% 절감 ($132 → $46)",
+      "19개 API · 테스트 87개 · 커버리지 75%",
+      "코드리뷰 피드백 136회 반영",
+    ],
+    stack: ["Java", "Spring", "AWS(EC2, RDS, VPC, CodePipeline)"],
+    link: "https://github.com/spring-roomescape-migration",
+  },
+  {
+    name: "(주)월클플레이",
+    period: "2023.06 – 2023.12",
+    role: "백엔드 개발 · PM 겸무",
+    desc:
+      "교육자/교육생 분리 회원 도메인과 인증·인가 시스템을 구축. PM 부재 상황에서 프로세스를 잡고 QA 기간을 크게 줄였음.",
+    highlights: [
+      "Spring Security · NICE 본인인증 · 소셜 로그인",
+      "명세 기반 테스트 시나리오로 QA 기간 2주 → 2일 (80% 단축)",
+      "기획-개발 공동 유저스토리 프로세스 도입",
+    ],
+    stack: ["Java", "Spring", "AWS(EC2, RDS, ROUTE53)"],
+    link: "https://wcle.co.kr",
+  },
+];
+
+const stacks = [
+  { group: "Backend", items: ["Java", "Spring Boot", "Spring Security", "Spring Data JPA", "Spring MVC", "MySQL", "JUnit5", "RestAssured", "Mockito", "Swagger"] },
+  { group: "Infra & DevOps", items: ["AWS(EC2, RDS, S3, CloudFront, Lambda, CloudWatch, VPC, CodePipeline)", "Docker · ECR", "CodePipeline CI/CD"] },
+  { group: "Collaboration", items: ["Git · GitHub", "Jira", "Slack · Notion · Figma"] },
+];
+
+const certs = [
+  "AWS Certified Solutions Architect – Associate (2023.04)",
+  "정보처리기사 (2021.11)",
+  "SQLD (2021.10)",
+];
+
+const education = [
+  "우아한테크코스 8기 · 학습 중",
+  "학습 테스트로 배우는 Spring 3기 (2024.07 – 2024.10)",
+  "ATDD, 클린코드 with Spring 6기 (2023.02 – 2023.03)",
+  "인프라공방 (2022.08 – 2022.09)",
+  "플레이데이터 부트캠프 (2021.12 – 2022.06)",
+];
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-3xl">
       <header className="mb-6 border-b border-ink-line pb-3">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">
           about
@@ -11,38 +76,31 @@ export default function AboutPage() {
         <h1 className="text-xl font-bold tracking-tight">who am i.</h1>
       </header>
 
+      {/* hero */}
       <section className="flex flex-col items-start gap-6 sm:flex-row sm:gap-7">
         <div className="shrink-0">
-          <div className="relative h-28 w-28 overflow-hidden rounded-full border border-ink-line bg-ink-bg">
-            {/* 프로필 이미지를 /public/avatar.jpg 로 올리면 자동 적용됩니다 */}
-            <Image
-              src="/avatar.svg"
-              alt="avatar"
-              width={112}
-              height={112}
-              className="h-full w-full object-cover"
-              unoptimized
-            />
+          <div className="relative h-32 w-32 overflow-hidden rounded-full border border-ink-line bg-ink-bg">
+            <Avatar size={128} alt="박민욱" />
           </div>
           <p className="mt-2 text-center font-mono text-[11px] text-ink-faint">
-            JohnPrk / 민욱
+            박민욱 · 민욱
           </p>
         </div>
 
         <div className="flex flex-col gap-4 text-[14.5px] leading-relaxed text-ink-soft">
           <p>
-            떡볶이를 팔다 개발자가 됐고, 지금은{" "}
-            <span className="font-semibold text-ink">우아한테크코스</span>
-            에서 객체지향과 씨름하고 있습니다. <br />
-            <span className="text-ink-muted">AI로 빠르게 만드는 것보다, 스스로 이해해서 만드는 쪽을 좋아합니다.</span>
+            <span className="font-semibold text-ink">백엔드 개발자.</span>{" "}
+            현실적인 제약 속에서 최선의 해결책을 찾아가는 일을 좋아합니다.
+            <br />
+            요즘은 <span className="font-semibold text-ink">AI와 잘 지내는 개발자</span>가 되는 쪽에 관심이 많습니다 — 만드는 방식도, 배우는 방식도 빠르게 바뀌고 있으니까.
           </p>
-          <div className="grid grid-cols-[80px_1fr] gap-y-1 font-mono text-[12px] text-ink-muted">
+          <div className="grid grid-cols-[76px_1fr] gap-y-1 font-mono text-[12px] text-ink-muted">
             <span className="text-ink-faint">now</span>
-            <span>우아한테크코스 8기 · 학습 중</span>
+            <span>우아한테크코스 8기 · 백엔드 학습</span>
             <span className="text-ink-faint">focus</span>
-            <span>객체지향 · AI · 기록</span>
-            <span className="text-ink-faint">before</span>
-            <span>떡볶이 · 파이썬 · ML/DL 공부</span>
+            <span>AI 협업 · 객체지향 · 인프라</span>
+            <span className="text-ink-faint">stack</span>
+            <span>Java · Spring · AWS</span>
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1 font-mono text-[12px]">
@@ -55,14 +113,6 @@ export default function AboutPage() {
               github
             </Link>
             <Link
-              href="https://uo3641493.tistory.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-md border border-ink-line px-2.5 py-1 text-ink-soft hover:border-ink hover:text-ink"
-            >
-              old blog (tistory)
-            </Link>
-            <Link
               href="mailto:uo3641493@gmail.com"
               className="rounded-md border border-ink-line px-2.5 py-1 text-ink-soft hover:border-ink hover:text-ink"
             >
@@ -72,28 +122,109 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="mt-10 border-t border-ink-line pt-6">
-        <h2 className="mb-3 font-mono text-[12px] uppercase tracking-[0.18em] text-ink-faint">
-          관심사
+      {/* projects / experience */}
+      <section className="mt-10">
+        <h2 className="mb-4 font-mono text-[12px] uppercase tracking-[0.18em] text-ink-faint">
+          work
         </h2>
-        <ul className="grid grid-cols-1 gap-2 text-[14px] text-ink-soft sm:grid-cols-2">
-          <li>
-            <span className="font-mono text-[11px] text-ink-faint">01.</span>{" "}
-            <strong className="font-semibold text-ink">AI</strong> — LLM이 어떻게 맥락을 유지하는지, 왜 특정 표현에 민감한지.
-          </li>
-          <li>
-            <span className="font-mono text-[11px] text-ink-faint">02.</span>{" "}
-            <strong className="font-semibold text-ink">객체지향</strong> — 책임을 어디에 둘지 매번 다시 묻기.
-          </li>
-          <li>
-            <span className="font-mono text-[11px] text-ink-faint">03.</span>{" "}
-            <strong className="font-semibold text-ink">기록</strong> — 지금의 생각과 과거의 생각을 비교할 수 있게.
-          </li>
-          <li>
-            <span className="font-mono text-[11px] text-ink-faint">04.</span>{" "}
-            <strong className="font-semibold text-ink">느린 학습</strong> — 쉽게 배운 건 쉽게 잊히니까.
-          </li>
-        </ul>
+        <div className="flex flex-col gap-5">
+          {projects.map((p) => (
+            <article
+              key={p.name}
+              className="rounded-xl border border-ink-line bg-white p-5"
+            >
+              <header className="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 className="text-[16px] font-semibold tracking-tight">
+                  {p.link ? (
+                    <Link
+                      href={p.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline"
+                    >
+                      {p.name}
+                    </Link>
+                  ) : (
+                    p.name
+                  )}
+                </h3>
+                <span className="font-mono text-[11px] text-ink-muted">
+                  {p.period}
+                </span>
+              </header>
+              <p className="mt-0.5 font-mono text-[11.5px] text-ink-faint">
+                {p.role}
+              </p>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">
+                {p.desc}
+              </p>
+              <ul className="mt-2 space-y-0.5 text-[13px] text-ink-soft">
+                {p.highlights.map((h) => (
+                  <li key={h} className="before:mr-1.5 before:content-['—']">
+                    {h}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex flex-wrap gap-1.5 font-mono text-[10.5px] text-ink-faint">
+                {p.stack.map((s) => (
+                  <span key={s} className="rounded bg-ink-bg px-2 py-0.5">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* stack */}
+      <section className="mt-10">
+        <h2 className="mb-3 font-mono text-[12px] uppercase tracking-[0.18em] text-ink-faint">
+          stack
+        </h2>
+        <div className="flex flex-col gap-2">
+          {stacks.map((s) => (
+            <div
+              key={s.group}
+              className="grid grid-cols-[120px_1fr] gap-3 border-b border-ink-line py-2 last:border-b-0"
+            >
+              <span className="font-mono text-[12px] text-ink-muted">
+                {s.group}
+              </span>
+              <div className="flex flex-wrap gap-1.5 font-mono text-[11px] text-ink-soft">
+                {s.items.map((i) => (
+                  <span key={i} className="rounded bg-ink-bg px-2 py-0.5">
+                    {i}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* certs & education */}
+      <section className="mt-10 grid gap-8 sm:grid-cols-2">
+        <div>
+          <h2 className="mb-3 font-mono text-[12px] uppercase tracking-[0.18em] text-ink-faint">
+            certs
+          </h2>
+          <ul className="space-y-1 text-[13.5px] text-ink-soft">
+            {certs.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h2 className="mb-3 font-mono text-[12px] uppercase tracking-[0.18em] text-ink-faint">
+            education
+          </h2>
+          <ul className="space-y-1 text-[13.5px] text-ink-soft">
+            {education.map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+        </div>
       </section>
     </div>
   );
