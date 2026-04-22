@@ -1,16 +1,16 @@
 import Link from "next/link";
-import PostFeed from "@/components/PostFeed";
-import { CATEGORIES } from "@/lib/categories";
-import { getAllPosts } from "@/lib/posts";
+import CategorySection from "@/components/CategorySection";
+import { CATEGORIES, CategorySlug } from "@/lib/categories";
+import { getPostsByCategory, getAllPosts } from "@/lib/posts";
 
 export default function Home() {
-  const posts = getAllPosts().map(({ content, ...meta }) => meta);
-  const total = posts.length;
+  const all = getAllPosts();
+  const total = all.length;
 
   return (
     <div className="flex flex-col gap-10">
       {/* hero (dark glass) */}
-      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl backdrop-blur-md md:mr-[260px]">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/45 shadow-2xl backdrop-blur-xl md:mr-[260px]">
         <div className="p-7 md:p-10">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">
             yggdrasil · {new Date().getFullYear()}
@@ -20,11 +20,19 @@ export default function Home() {
             <br />
             <span className="text-ink-muted">growing one post at a time.</span>
           </h1>
-          <p className="mt-4 max-w-xl text-[14px] leading-relaxed text-ink-soft">
-            backend 개발자 박민욱의 블로그. 우아한테크코스에서 배운 것, 실무에서
-            마주친 문제, AI와 함께 만드는 것들을 기록합니다. 오른쪽 <strong className="text-white">LIVE</strong> 카메라를 드래그해 나무를 살펴보세요 — 내가 글로 쓴 키워드는 노랗게 빛납니다.
-          </p>
-          <div className="mt-5 flex w-max flex-wrap items-center gap-x-4 gap-y-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 font-mono text-[12.5px] text-ink-muted">
+          <div className="mt-5 max-w-2xl space-y-4 text-[14px] leading-[1.95] text-ink-soft">
+            <p>
+              거대하고 끝없이 뻗어나가는 기술 생태계 속에서, 오늘 마주한 문제들을 묵묵히 하나씩 해결해 나갑니다.
+              기술의 형태가 끊임없이 변하고 낯선 도구와 복잡한 설계가 쏟아져도, 이를 하나씩 부딪히며 이뤄낸 성취는 결코 흩어지지 않습니다.
+              결국 모든 지식과 경험은 단단한 뼈대가 되어 서로 연결되기 때문입니다.
+              무한한 세상을 탐험하며, 배움이 하나의 본질에서 만난다는 것을 증명해 나가는 기록입니다.
+            </p>
+            <p>
+              오른쪽 <strong className="text-white">LIVE</strong> 카메라를 드래그해 나무를 살펴보세요 — 내가 글로 다룬 키워드와 그 주변 가지는{" "}
+              <span className="text-amber-300">노랗게</span> 빛납니다.
+            </p>
+          </div>
+          <div className="mt-6 flex w-max flex-wrap items-center gap-x-4 gap-y-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 font-mono text-[12.5px] text-ink-muted">
             <span>{total} leaves</span>
             <span className="text-ink-faint">|</span>
             {CATEGORIES.map((c) => (
@@ -50,16 +58,26 @@ export default function Home() {
                         : "0 0 8px #059669",
                   }}
                 />
-                {c.label} {posts.filter((p) => p.category === c.slug).length}
+                {c.label} {all.filter((p) => p.category === c.slug).length}
               </Link>
             ))}
+            <span className="text-ink-faint">|</span>
+            <Link href="/posts/" className="hover:text-white">
+              view all →
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* unified post feed */}
-      <div className="md:mr-[260px]">
-        <PostFeed posts={posts} />
+      {/* category shelves — 3 per category */}
+      <div className="flex flex-col gap-10 md:mr-[260px]">
+        {CATEGORIES.map((c) => (
+          <CategorySection
+            key={c.slug}
+            category={c.slug as CategorySlug}
+            posts={getPostsByCategory(c.slug as CategorySlug).slice(0, 3)}
+          />
+        ))}
       </div>
     </div>
   );

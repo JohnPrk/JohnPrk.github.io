@@ -12,7 +12,7 @@ export default function Header() {
         <span className="hidden text-ink-faint sm:inline">/ blog</span>
       </Link>
       <nav className="flex items-center gap-5 font-mono text-[13px] text-ink-muted">
-        <Link className="transition-colors hover:text-white" href="/">
+        <Link className="transition-colors hover:text-white" href="/posts/">
           post
         </Link>
         <Link className="transition-colors hover:text-white" href="/archive/">

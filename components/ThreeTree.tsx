@@ -219,6 +219,79 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       glowSphere.position.set(0, 5, 0);
       treeGroup.add(glowSphere);
 
+      // ---------- active nodes (yellow cluster around written keywords) ----------
+      // deterministic keyword → node index
+      function kwNodeIdx(label: string) {
+        let h = 2166136261 >>> 0;
+        for (let i = 0; i < label.length; i++) {
+          h ^= label.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0) % nodePositions.length;
+      }
+
+      const activeNodes = new Set<number>();
+      const ACTIVE_RADIUS_SQ = 6 * 6;
+      for (const kw of keywords) {
+        if (kw.count <= 0) continue;
+        const ci = kwNodeIdx(kw.label);
+        const cp = nodePositions[ci];
+        for (let i = 0; i < nodePositions.length; i++) {
+          const dx = nodePositions[i].x - cp.x;
+          const dy = nodePositions[i].y - cp.y;
+          const dz = nodePositions[i].z - cp.z;
+          if (dx * dx + dy * dy + dz * dz < ACTIVE_RADIUS_SQ) activeNodes.add(i);
+        }
+      }
+
+      // yellow point overlay for active nodes
+      const yellowPointArr: number[] = [];
+      activeNodes.forEach((idx) => {
+        const p = nodePositions[idx];
+        yellowPointArr.push(p.x, p.y, p.z);
+      });
+      const yellowPointGeo = new THREE.BufferGeometry();
+      yellowPointGeo.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(yellowPointArr, 3)
+      );
+      const yellowPointMat = new THREE.PointsMaterial({
+        color: 0xfbbf24,
+        size: 0.95,
+        map: circleTexture,
+        transparent: true,
+        opacity: 0.95,
+        alphaTest: 0.1,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const yellowPoints = new THREE.Points(yellowPointGeo, yellowPointMat);
+      treeGroup.add(yellowPoints);
+
+      // yellow line overlay — edges where at least one endpoint is active
+      const yellowLineIndices: number[] = [];
+      for (let k = 0; k < lineIndices.length; k += 2) {
+        const a = lineIndices[k];
+        const b = lineIndices[k + 1];
+        if (activeNodes.has(a) || activeNodes.has(b)) {
+          yellowLineIndices.push(a, b);
+        }
+      }
+      const yellowLineGeo = new THREE.BufferGeometry();
+      yellowLineGeo.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(vertices, 3)
+      );
+      yellowLineGeo.setIndex(yellowLineIndices);
+      const yellowLineMat = new THREE.LineBasicMaterial({
+        color: 0xfbbf24,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending,
+      });
+      const yellowLines = new THREE.LineSegments(yellowLineGeo, yellowLineMat);
+      treeGroup.add(yellowLines);
+
       // ---------- keyword sprites (highlight active = used in posts) ----------
       type Entry = {
         sprite: InstanceType<typeof THREE.Sprite>;
@@ -263,8 +336,8 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       }
 
       keywords.forEach((kw) => {
-        const target =
-          nodePositions[Math.floor(Math.random() * nodePositions.length)];
+        const idx = kwNodeIdx(kw.label);
+        const target = nodePositions[idx];
         const sprite = createSprite(kw.label, kw.count > 0, kw.count);
         const offset = target.clone().normalize().multiplyScalar(2);
         sprite.position.copy(target).add(offset);
@@ -273,7 +346,7 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
           sprite,
           active: kw.count > 0,
           count: kw.count,
-          phase: Math.random() * Math.PI * 2,
+          phase: (idx % 628) / 100,
         });
       });
 
@@ -325,6 +398,12 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
           (e.sprite.material as InstanceType<typeof THREE.SpriteMaterial>).opacity =
             0.85 + 0.13 * Math.sin(t + e.phase);
         }
+
+        // yellow overlay breathing — node + edge synchronized
+        const yPulse = 0.85 + 0.15 * Math.sin(t * 1.2);
+        yellowPointMat.size = 0.95 * (0.95 + 0.15 * Math.sin(t * 1.3));
+        yellowPointMat.opacity = yPulse;
+        yellowLineMat.opacity = 0.35 + 0.25 * Math.sin(t * 1.5);
 
         renderer.setClearColor(0x000000, 0);
         renderer.clear();
@@ -390,6 +469,10 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         linesGeo.dispose();
         pointsMat.dispose();
         linesMat.dispose();
+        yellowPointGeo.dispose();
+        yellowLineGeo.dispose();
+        yellowPointMat.dispose();
+        yellowLineMat.dispose();
         glowGeo.dispose();
         glowMat.dispose();
         circleTexture.dispose();

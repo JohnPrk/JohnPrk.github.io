@@ -88,12 +88,15 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-4 text-[14.5px] leading-relaxed text-ink-soft">
+        <div className="flex flex-col gap-5 text-[14.5px] leading-[2] text-ink-soft">
           <p>
-            <span className="font-semibold text-ink">백엔드 개발자.</span>{" "}
+            <span className="font-semibold text-white">백엔드 개발자.</span>{" "}
             현실적인 제약 속에서 최선의 해결책을 찾아가는 일을 좋아합니다.
-            <br />
-            요즘은 <span className="font-semibold text-ink">AI와 잘 지내는 개발자</span>가 되는 쪽에 관심이 많습니다 — 만드는 방식도, 배우는 방식도 빠르게 바뀌고 있으니까.
+          </p>
+          <p>
+            변화를 경계하기보다 흔들리지 않는 기본기를 다지고, 그 위에서{" "}
+            <span className="font-semibold text-white">AI와 가장 잘 지내는 개발자</span>
+            가 되는 것을 목표로 합니다.
           </p>
           <div className="grid grid-cols-[76px_1fr] gap-y-1 font-mono text-[12px] text-ink-muted">
             <span className="text-ink-faint">now</span>
@@ -126,7 +129,7 @@ export default function AboutPage() {
       {/* projects / experience */}
       <section className="mt-10">
         <h2 className="mb-4 font-mono text-[12px] uppercase tracking-[0.18em] text-ink-faint">
-          work
+          work &amp; experience
         </h2>
         <div className="flex flex-col gap-5">
           {projects.map((p) => (
