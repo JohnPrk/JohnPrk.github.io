@@ -31,7 +31,7 @@ export default function CategorySection({
           수집 중입니다. coming soon.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {posts.map((p, i) => (
             <PostCard key={`${p.category}/${p.slug}`} post={p} index={posts.length - i} />
           ))}

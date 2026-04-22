@@ -10,6 +10,7 @@ export type PostMeta = {
   date: string;
   description?: string;
   tags?: string[];
+  thumb?: string;
 };
 
 export type Post = PostMeta & { content: string };
@@ -40,6 +41,7 @@ function readCategory(category: CategorySlug): Post[] {
         date,
         description: data.description as string | undefined,
         tags: (data.tags as string[] | undefined) ?? [],
+        thumb: data.thumb as string | undefined,
         content,
       };
     });
