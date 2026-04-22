@@ -4,22 +4,30 @@ import { categoryLabel } from "@/lib/categories";
 
 export default function PostList({ posts }: { posts: Post[] }) {
   if (posts.length === 0) {
-    return <p className="mt-6 text-sm text-ink-muted">아직 글이 없어요.</p>;
+    return (
+      <p className="mt-4 rounded-lg border border-dashed border-ink-line p-8 text-center font-mono text-[12px] text-ink-faint">
+        수집 중입니다. coming soon.
+      </p>
+    );
   }
   return (
-    <ul className="flex flex-col divide-y divide-ink-line">
+    <ul className="divide-y divide-ink-line">
       {posts.map((p) => (
-        <li key={`${p.category}/${p.slug}`} className="py-5">
-          <Link href={`/${p.category}/${p.slug}/`} className="group block">
-            <div className="mb-1 flex items-center gap-3 text-xs text-ink-muted">
-              <span className="rounded bg-ink-bg px-2 py-0.5 text-ink-soft">
-                {categoryLabel(p.category)}
-              </span>
+        <li key={`${p.category}/${p.slug}`}>
+          <Link href={`/${p.category}/${p.slug}/`} className="group block py-5">
+            <div className="mb-1 flex items-center gap-2 font-mono text-[11px] text-ink-muted">
+              <span className="cat-dot" data-cat={p.category} />
+              <span>{categoryLabel(p.category)}</span>
+              <span className="text-ink-faint">·</span>
               <time>{p.date}</time>
             </div>
-            <h2 className="text-lg font-semibold group-hover:underline">{p.title}</h2>
+            <h3 className="text-[16px] font-semibold tracking-[-0.005em] text-ink group-hover:underline">
+              {p.title}
+            </h3>
             {p.description ? (
-              <p className="mt-1 text-sm text-ink-muted">{p.description}</p>
+              <p className="mt-1 text-[13.5px] leading-relaxed text-ink-muted">
+                {p.description}
+              </p>
             ) : null}
           </Link>
         </li>

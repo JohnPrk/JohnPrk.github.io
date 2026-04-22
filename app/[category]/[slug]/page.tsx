@@ -20,18 +20,31 @@ export default function PostPage({
   if (!post) notFound();
 
   return (
-    <article>
-      <div className="mb-4 flex items-center gap-3 text-xs text-ink-muted">
+    <article className="mx-auto max-w-[680px]">
+      <div className="mb-5 flex items-center gap-2 font-mono text-[12px] text-ink-muted">
         <Link
           href={`/${post.category}/`}
-          className="rounded bg-ink-bg px-2 py-0.5 text-ink-soft hover:text-ink"
+          className="inline-flex items-center hover:text-ink"
         >
+          <span className="cat-dot" data-cat={post.category} />
           {categoryLabel(post.category)}
         </Link>
+        <span className="text-ink-faint">·</span>
         <time>{post.date}</time>
       </div>
-      <h1 className="mb-8 text-2xl font-bold">{post.title}</h1>
+      <h1 className="mb-8 text-[26px] font-bold leading-tight tracking-[-0.01em]">
+        {post.title}
+      </h1>
       <Markdown source={post.content} />
+      {post.tags && post.tags.length > 0 ? (
+        <div className="mt-10 flex flex-wrap gap-1.5 border-t border-ink-line pt-5 font-mono text-[11px] text-ink-faint">
+          {post.tags.map((t) => (
+            <span key={t} className="rounded bg-ink-bg px-2 py-0.5">
+              #{t}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </article>
   );
 }

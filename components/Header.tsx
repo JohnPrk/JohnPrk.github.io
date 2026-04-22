@@ -1,23 +1,28 @@
 import Link from "next/link";
-import { CATEGORIES } from "@/lib/categories";
 
 export default function Header() {
   return (
-    <header className="flex flex-col gap-3 border-b border-ink-line pb-6">
-      <Link href="/" className="text-2xl font-bold tracking-tight">
-        johnprk
+    <header className="flex items-center justify-between">
+      <Link
+        href="/"
+        className="group flex items-baseline gap-2 font-mono text-[15px] font-semibold tracking-tight"
+      >
+        <span className="inline-block h-2 w-2 rounded-full bg-cat-ai transition-transform group-hover:scale-110" />
+        <span>johnprk</span>
+        <span className="hidden text-ink-faint sm:inline">/ studying</span>
       </Link>
-      <nav className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-muted">
-        <Link className="hover:text-ink" href="/">
-          all
+      <nav className="flex items-center gap-5 font-mono text-[13px] text-ink-muted">
+        <Link className="hover:text-ink" href="/archive/">
+          archive
         </Link>
-        {CATEGORIES.map((c) => (
-          <Link key={c.slug} className="hover:text-ink" href={`/${c.slug}/`}>
-            {c.label}
-          </Link>
-        ))}
-        <Link className="ml-auto hover:text-ink" href="/admin/">
-          write
+        <Link className="hover:text-ink" href="/about/">
+          about
+        </Link>
+        <Link
+          className="rounded-md border border-ink-line px-2.5 py-1 text-[12px] text-ink-soft hover:border-ink hover:text-ink"
+          href="/admin/"
+        >
+          ✎ write
         </Link>
       </nav>
     </header>
