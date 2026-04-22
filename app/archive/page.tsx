@@ -14,46 +14,48 @@ export default function ArchivePage() {
   const years = Array.from(byYear.keys()).sort((a, b) => (a < b ? 1 : -1));
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <header className="mb-6 flex items-end justify-between border-b border-ink-line pb-3">
-        <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">
-            archive
-          </p>
-          <h1 className="text-xl font-bold tracking-tight">언제 무엇을 썼는지.</h1>
-        </div>
-        <span className="font-mono text-[12px] text-ink-muted">{posts.length} posts</span>
-      </header>
+    <div className="mx-auto max-w-3xl md:mr-[260px]">
+      <div className="glass p-6 md:p-8">
+        <header className="mb-6 flex items-end justify-between border-b border-white/10 pb-3">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+              archive
+            </p>
+            <h1 className="text-xl font-bold tracking-tight">언제 무엇을 썼는지.</h1>
+          </div>
+          <span className="font-mono text-[12px] text-ink-muted">{posts.length} posts</span>
+        </header>
 
-      {years.map((year) => (
-        <section key={year} className="mb-8">
-          <h2 className="mb-2 font-mono text-[28px] font-bold text-ink">{year}</h2>
-          <ul>
-            {byYear.get(year)!.map((p) => (
-              <li key={`${p.category}/${p.slug}`}>
-                <Link
-                  href={`/${p.category}/${p.slug}/`}
-                  className="archive-row group"
-                >
-                  <time className="font-mono text-[12px] text-ink-muted">
-                    {p.date}
-                  </time>
-                  <span className="archive-title text-[14.5px] leading-snug group-hover:underline">
-                    {p.title}
-                  </span>
-                  <span
-                    className="rounded bg-ink-bg px-2 py-0.5 font-mono text-[10.5px] text-ink-soft"
-                    data-cat={p.category}
+        {years.map((year) => (
+          <section key={year} className="mb-8">
+            <h2 className="mb-2 font-mono text-[28px] font-bold text-white">{year}</h2>
+            <ul>
+              {byYear.get(year)!.map((p) => (
+                <li key={`${p.category}/${p.slug}`}>
+                  <Link
+                    href={`/${p.category}/${p.slug}/`}
+                    className="archive-row group"
                   >
-                    <span className="cat-dot" data-cat={p.category} />
-                    {categoryLabel(p.category)}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+                    <time className="font-mono text-[12px] text-ink-muted">
+                      {p.date}
+                    </time>
+                    <span className="archive-title text-[14.5px] leading-snug group-hover:underline">
+                      {p.title}
+                    </span>
+                    <span
+                      className="rounded border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[10.5px] text-ink-soft"
+                      data-cat={p.category}
+                    >
+                      <span className="cat-dot" data-cat={p.category} />
+                      {categoryLabel(p.category)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
     </div>
   );
 }

@@ -11,7 +11,7 @@ export default function PostList({ posts }: { posts: Post[] }) {
     );
   }
   return (
-    <ul className="divide-y divide-ink-line">
+    <ul className="divide-y divide-white/10">
       {posts.map((p) => (
         <li key={`${p.category}/${p.slug}`}>
           <Link href={`/${p.category}/${p.slug}/`} className="group block py-5">

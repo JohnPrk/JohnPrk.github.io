@@ -26,25 +26,19 @@ const config: Config = {
       },
       colors: {
         ink: {
-          DEFAULT: "#0f0f10",
-          soft: "#2a2a2d",
-          muted: "#6b6b72",
-          faint: "#a8a8b0",
-          line: "#e8e8ec",
-          bg: "#f6f6f8",
-          paper: "#fafaf7",
+          DEFAULT: "#f8fafc",
+          soft: "#cbd5e1",
+          muted: "#cbd5e1",
+          faint: "#64748b",
+          line: "rgba(255, 255, 255, 0.1)",
+          bg: "rgba(255, 255, 255, 0.04)",
+          paper: "#020e06",
         },
         cat: {
           woowa: "#d97706",
           ai: "#7c3aed",
           dev: "#059669",
         },
-      },
-      backgroundImage: {
-        grid: "radial-gradient(circle, #e4e4ea 1px, transparent 1px)",
-      },
-      backgroundSize: {
-        "grid-16": "16px 16px",
       },
     },
   },

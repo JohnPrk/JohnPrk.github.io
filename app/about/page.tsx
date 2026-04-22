@@ -68,8 +68,9 @@ const education = [
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-3xl">
-      <header className="mb-6 border-b border-ink-line pb-3">
+    <div className="mx-auto max-w-3xl md:mr-[260px]">
+      <div className="glass p-6 md:p-8">
+      <header className="mb-6 border-b border-white/10 pb-3">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">
           about
         </p>
@@ -79,7 +80,7 @@ export default function AboutPage() {
       {/* hero */}
       <section className="flex flex-col items-start gap-6 sm:flex-row sm:gap-7">
         <div className="shrink-0">
-          <div className="relative h-32 w-32 overflow-hidden rounded-full border border-ink-line bg-ink-bg">
+          <div className="relative h-32 w-32 overflow-hidden rounded-full border border-white/15 bg-white/5">
             <Avatar size={128} alt="박민욱" />
           </div>
           <p className="mt-2 text-center font-mono text-[11px] text-ink-faint">
@@ -108,13 +109,13 @@ export default function AboutPage() {
               href="https://github.com/JohnPrk"
               target="_blank"
               rel="noreferrer"
-              className="rounded-md border border-ink-line px-2.5 py-1 text-ink-soft hover:border-ink hover:text-ink"
+              className="rounded-md border border-white/15 px-2.5 py-1 text-ink-soft hover:border-white/40 hover:text-white"
             >
               github
             </Link>
             <Link
               href="mailto:uo3641493@gmail.com"
-              className="rounded-md border border-ink-line px-2.5 py-1 text-ink-soft hover:border-ink hover:text-ink"
+              className="rounded-md border border-white/15 px-2.5 py-1 text-ink-soft hover:border-white/40 hover:text-white"
             >
               email
             </Link>
@@ -131,7 +132,7 @@ export default function AboutPage() {
           {projects.map((p) => (
             <article
               key={p.name}
-              className="rounded-xl border border-ink-line bg-white p-5"
+              className="rounded-xl border border-white/10 bg-white/[0.04] p-5"
             >
               <header className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-[16px] font-semibold tracking-tight">
@@ -167,7 +168,7 @@ export default function AboutPage() {
               </ul>
               <div className="mt-3 flex flex-wrap gap-1.5 font-mono text-[10.5px] text-ink-faint">
                 {p.stack.map((s) => (
-                  <span key={s} className="rounded bg-ink-bg px-2 py-0.5">
+                  <span key={s} className="rounded border border-white/10 bg-white/5 px-2 py-0.5">
                     {s}
                   </span>
                 ))}
@@ -186,14 +187,14 @@ export default function AboutPage() {
           {stacks.map((s) => (
             <div
               key={s.group}
-              className="grid grid-cols-[120px_1fr] gap-3 border-b border-ink-line py-2 last:border-b-0"
+              className="grid grid-cols-[120px_1fr] gap-3 border-b border-white/10 py-2 last:border-b-0"
             >
               <span className="font-mono text-[12px] text-ink-muted">
                 {s.group}
               </span>
               <div className="flex flex-wrap gap-1.5 font-mono text-[11px] text-ink-soft">
                 {s.items.map((i) => (
-                  <span key={i} className="rounded bg-ink-bg px-2 py-0.5">
+                  <span key={i} className="rounded border border-white/10 bg-white/5 px-2 py-0.5">
                     {i}
                   </span>
                 ))}
@@ -226,6 +227,7 @@ export default function AboutPage() {
           </ul>
         </div>
       </section>
+      </div>
     </div>
   );
 }

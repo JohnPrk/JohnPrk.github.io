@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ThreeTree from "@/components/ThreeTree";
+import { getKeywordHits } from "@/lib/keywords";
 
 export const metadata: Metadata = {
   title: "johnprk — 공부 기록",
@@ -9,12 +11,14 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const keywords = getKeywordHits();
   return (
     <html lang="ko">
-      <body className="min-h-screen font-sans text-ink antialiased">
-        <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-5 sm:px-6 md:pt-7">
+      <body className="min-h-screen overflow-x-hidden bg-transparent font-sans text-ink antialiased">
+        <ThreeTree keywords={keywords} />
+        <div className="relative z-0 mx-auto w-full max-w-6xl px-4 pb-16 pt-5 sm:px-6 md:pt-7">
           <Header />
-          <main className="mt-7 md:mt-9">{children}</main>
+          <main className="mt-7 md:mt-10">{children}</main>
           <Footer />
         </div>
       </body>
