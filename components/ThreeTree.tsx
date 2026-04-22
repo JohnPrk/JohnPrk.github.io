@@ -42,16 +42,20 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       container.appendChild(renderer.domElement);
 
-      // OrbitControls bound to the full canvas. Disabled by default so it doesn't
-      // interfere with page scroll / UI clicks. Enabled while Zen Mode is active.
+      // 🚨 복구: body가 아니라 "캔버스 자체"에만 이벤트를 걸어 버튼 클릭 방해를 막습니다.
       const controls = new OrbitControls(camera, renderer.domElement);
+      renderer.domElement.style.pointerEvents = "none"; // 초기엔 항상 none
+
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.8;
       controls.enablePan = false;
+
+      // 평상시에는 컨트롤 자체를 끕니다.
+      controls.enableRotate = false;
       controls.enableZoom = false;
-      controls.enabled = false;
+
       controls.minDistance = 30;
       controls.maxDistance = 150;
       controls.target.set(focusX, 0, 0);
@@ -59,11 +63,10 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       const baseTreeX = focusX;
       treeGroup.position.x = baseTreeX;
 
-      // ---------- tree geometry: trunk + branches + leaves + roots ----------
+      // ---------- tree geometry ----------
       const nodePositions: InstanceType<typeof THREE.Vector3>[] = [];
       const branchEnds: InstanceType<typeof THREE.Vector3>[] = [];
 
-      // trunk cloud (dense cylinder of particles, tapering upward)
       for (let y = -30; y < 10; y += 0.8) {
         const radius = 2 + 12 * Math.exp(-(y + 30) / 10);
         const count = Math.floor(radius * 4);
@@ -81,7 +84,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         }
       }
 
-      // branches radiating upward
       const numBranches = 45;
       for (let b = 0; b < numBranches; b++) {
         const startY = -5 + Math.random() * 15;
@@ -101,7 +103,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         branchEnds.push(new THREE.Vector3(bx, startY + by - 5, bz));
       }
 
-      // leaf clusters at branch tips
       branchEnds.forEach((end) => {
         const clusterSize = 8 + Math.random() * 6;
         const leafCount = 120 + Math.random() * 100;
@@ -119,7 +120,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         }
       });
 
-      // roots below
       for (let b = 0; b < 20; b++) {
         const length = 15 + Math.random() * 20;
         const angle = Math.random() * Math.PI * 2;
@@ -145,7 +145,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         new THREE.Float32BufferAttribute(vertices, 3)
       );
 
-      // round point texture
       const circleCanvas = document.createElement("canvas");
       circleCanvas.width = 32;
       circleCanvas.height = 32;
@@ -169,7 +168,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       const particleSystem = new THREE.Points(particlesGeo, pointsMat);
       treeGroup.add(particleSystem);
 
-      // connecting lines (short proximity edges)
       const lineIndices: number[] = [];
       const maxDistSq = 4.5 * 4.5;
       for (let i = 0; i < nodePositions.length; i++) {
@@ -200,7 +198,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       const lineSystem = new THREE.LineSegments(linesGeo, linesMat);
       treeGroup.add(lineSystem);
 
-      // central glow
       const glowGeo = new THREE.SphereGeometry(15, 32, 32);
       const glowMat = new THREE.MeshBasicMaterial({
         color: 0x16a34a,
@@ -213,8 +210,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       glowSphere.position.set(0, 5, 0);
       treeGroup.add(glowSphere);
 
-      // ---------- active nodes (yellow cluster around written keywords) ----------
-      // deterministic keyword → node index
       function kwNodeIdx(label: string) {
         let h = 2166136261 >>> 0;
         for (let i = 0; i < label.length; i++) {
@@ -238,7 +233,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         }
       }
 
-      // yellow point overlay for active nodes
       const yellowPointArr: number[] = [];
       activeNodes.forEach((idx) => {
         const p = nodePositions[idx];
@@ -262,7 +256,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       const yellowPoints = new THREE.Points(yellowPointGeo, yellowPointMat);
       treeGroup.add(yellowPoints);
 
-      // yellow line overlay — edges where at least one endpoint is active
       const yellowLineIndices: number[] = [];
       for (let k = 0; k < lineIndices.length; k += 2) {
         const a = lineIndices[k];
@@ -286,7 +279,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       const yellowLines = new THREE.LineSegments(yellowLineGeo, yellowLineMat);
       treeGroup.add(yellowLines);
 
-      // ---------- keyword sprites (highlight active = used in posts) ----------
       type Entry = {
         sprite: InstanceType<typeof THREE.Sprite>;
         active: boolean;
@@ -306,12 +298,12 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         if (active) {
           const strength = Math.min(1, count / maxCount);
           c.font = 'bold 22px "JetBrains Mono", monospace, sans-serif';
-          c.fillStyle = "#fde68a"; // amber-200
-          c.shadowColor = "#fbbf24"; // amber-400
+          c.fillStyle = "#fde68a";
+          c.shadowColor = "#fbbf24";
           c.shadowBlur = 12 + strength * 10;
         } else {
           c.font = 'bold 19px "JetBrains Mono", monospace, sans-serif';
-          c.fillStyle = "#86efac"; // green-300
+          c.fillStyle = "#86efac";
           c.shadowColor = "#22c55e";
           c.shadowBlur = 4;
         }
@@ -351,7 +343,7 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       let zen = false;
 
       const onMouseMove = (e: MouseEvent) => {
-        if (zen) return; // in zen the camera is user-controlled via OrbitControls
+        if (zen) return;
         mouseX = (e.clientX / window.innerWidth) * 2 - 1;
         mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
       };
@@ -364,17 +356,45 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
       };
+      const blockHeader = (e: PointerEvent) => {
+        if (e.clientY < 80) e.stopPropagation();
+      };
       const onZen = (e: Event) => {
         const active = Boolean((e as CustomEvent<boolean>).detail);
         zen = active;
-        controls.enabled = active;
+
+        controls.enableRotate = active;
+        controls.enableZoom = active;
         controls.autoRotate = !active;
+
+        if (bgRef.current) {
+          if (active) {
+            // canvas를 header 아래쪽 영역만 덮도록 top을 80px로 내림
+            bgRef.current.className =
+              "fixed inset-x-0 bottom-0 z-[39] pointer-events-auto bg-transparent";
+            bgRef.current.style.top = "80px";
+            renderer.domElement.style.pointerEvents = "auto";
+          } else {
+            requestAnimationFrame(() => {
+              if (bgRef.current) {
+                bgRef.current.className =
+                  "fixed inset-0 -z-20 pointer-events-none bg-transparent";
+                bgRef.current.style.top = "";
+                renderer.domElement.style.pointerEvents = "none";
+              }
+            });
+          }
+        }
+
         if (!active) {
-          // gently ease group drift back to neutral
           mouseX = 0;
           mouseY = 0;
+          camera.position.set(focusX, 5, 90);
+          controls.target.set(focusX, 0, 0);
+          controls.update();
         }
       };
+
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("resize", onResize);
@@ -395,7 +415,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
           treeGroup.position.y += (targetGY - treeGroup.position.y) * 0.05;
           treeGroup.position.z += (targetGZ - treeGroup.position.z) * 0.05;
         } else {
-          // snap drift to neutral while zen'ing so OrbitControls fully owns framing
           treeGroup.position.x += (baseTreeX - treeGroup.position.x) * 0.08;
           treeGroup.position.y += (0 - treeGroup.position.y) * 0.08;
           treeGroup.position.z += (0 - treeGroup.position.z) * 0.08;
@@ -404,7 +423,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         const pulse = 1 + Math.sin(Date.now() * 0.002) * 0.06;
         glowSphere.scale.set(pulse, pulse, pulse);
 
-        // active keyword pulse — breathing glow
         const t = Date.now() * 0.002;
         for (const e of entries) {
           if (!e.active) continue;
@@ -414,7 +432,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
             0.85 + 0.13 * Math.sin(t + e.phase);
         }
 
-        // yellow overlay breathing — node + edge synchronized
         const yPulse = 0.85 + 0.15 * Math.sin(t * 1.2);
         yellowPointMat.size = 0.95 * (0.95 + 0.15 * Math.sin(t * 1.3));
         yellowPointMat.opacity = yPulse;
@@ -467,15 +484,14 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       <div
         ref={bgRef}
         aria-hidden
-        className="fixed inset-0 -z-20"
-        style={{ background: "#020e06" }}
+        className="fixed inset-0 -z-20 pointer-events-none bg-transparent"
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10"
+        className="pointer-events-none fixed inset-0 -z-30"
         style={{
-          background:
-            "radial-gradient(circle at center, transparent 20%, #020e06 120%)",
+          background: "radial-gradient(circle at center, transparent 20%, #020e06 120%)",
+          backgroundColor: "#020e06",
         }}
       />
     </>

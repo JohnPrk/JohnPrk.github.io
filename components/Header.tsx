@@ -16,7 +16,7 @@ export default function Header() {
   }, [zen]);
 
   return (
-    <header className="relative z-30 flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md transition-colors duration-500 md:mr-[260px] md:p-4">
+    <header className="pointer-events-auto fixed top-4 left-4 right-4 z-[9999] flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md transition-colors duration-500 md:mr-[260px] md:p-4">
       <Link
         href="/"
         className="group zen-hide flex items-baseline gap-2 font-mono text-[15px] font-semibold tracking-tight"
@@ -46,7 +46,10 @@ export default function Header() {
         </Link>
         <button
           type="button"
-          onClick={() => setZen((v) => !v)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setZen((v) => !v);
+          }}
           aria-pressed={zen}
           aria-label={zen ? "exit observe mode" : "enter observe mode"}
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 transition-colors ${

@@ -84,23 +84,22 @@ export default function AboutPage() {
             <Avatar size={128} alt="박민욱" />
           </div>
           <p className="mt-2 text-center font-mono text-[11px] text-ink-faint">
-            박민욱 · 민욱
+            박민욱 · 티뉴(우테코)
           </p>
         </div>
 
         <div className="flex flex-col gap-5 text-[14.5px] leading-[2] text-ink-soft">
           <p>
-            <span className="font-semibold text-white">백엔드 개발자.</span>{" "}
             현실적인 제약 속에서 최선의 해결책을 찾아가는 일을 좋아합니다.
           </p>
           <p>
-            변화를 경계하기보다 흔들리지 않는 기본기를 다지고, 그 위에서{" "}
+            변화를 두려워 하기보다 흔들리지 않는 기본기를 다지고, 그 위에서{" "}
             <span className="font-semibold text-white">AI와 가장 잘 지내는 개발자</span>
             가 되는 것을 목표로 합니다.
           </p>
           <div className="grid grid-cols-[76px_1fr] gap-y-1 font-mono text-[12px] text-ink-muted">
             <span className="text-ink-faint">now</span>
-            <span>우아한테크코스 8기 · 백엔드 학습</span>
+            <span>우아한테크코스 8기 · 백엔드</span>
             <span className="text-ink-faint">focus</span>
             <span>AI 협업 · 객체지향 · 인프라</span>
             <span className="text-ink-faint">stack</span>

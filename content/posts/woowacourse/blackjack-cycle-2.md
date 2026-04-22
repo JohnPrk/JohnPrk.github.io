@@ -2,6 +2,7 @@
 title: "우테코 - 블랙잭 회고(사이클 2)"
 category: "wooteco"
 slug: "mission-3"
+num: 3
 thumb: "/images/wooteco/mission-3.png"
 date: 2026-03-30
 description: "베팅 요구사항이 들어오며 드러난 책임 경계, 값 객체, 새로운 도메인의 도출."

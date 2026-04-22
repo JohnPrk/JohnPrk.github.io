@@ -5,10 +5,8 @@ import PostThumb from "./PostThumb";
 
 export default function PostCard({
   post,
-  index,
 }: {
   post: Post;
-  index: number;
 }) {
   return (
     <Link
@@ -23,7 +21,7 @@ export default function PostCard({
           slug={post.slug}
           title={post.title}
         />
-        <span className="card-num">#{String(index).padStart(3, "0")}</span>
+        <span className="card-num">#{String(post.num ?? "?").padStart(3, "0")}</span>
       </div>
       <div className="flex flex-col gap-1.5 px-0.5">
         <div className="flex items-center gap-1.5 font-mono text-[11px] text-ink-muted">

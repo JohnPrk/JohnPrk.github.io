@@ -46,11 +46,10 @@ export default function CategorySection({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {posts.map((p, i) => (
+          {posts.map((p) => (
             <PostCard
               key={`${p.category}/${p.slug}`}
               post={p}
-              index={posts.length - i}
             />
           ))}
         </div>

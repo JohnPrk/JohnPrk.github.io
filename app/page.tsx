@@ -26,7 +26,7 @@ export default function Home() {
               무한한 세상을 탐험하며, 배움이 하나의 본질에서 만난다는 것을 증명해 나가는 기록입니다.
             </p>
             <p>
-              오른쪽 <strong className="text-white">LIVE</strong> 카메라를 드래그해 나무를 살펴보세요 — 내가 글로 다룬 키워드와 그 주변 가지는{" "}
+              오른쪽 상단의 <strong className="text-white">Observe</strong>를 눌러보시면 3D로 살펴보실 수 있습니다. 블로그에서 다룬 키워드는 노드와 간선 모두 {" "}
               <span className="text-amber-300">노랗게</span> 빛납니다.
             </p>
           </div>
