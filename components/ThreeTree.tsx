@@ -5,7 +5,6 @@ import type { KeywordHit } from "@/lib/keywords";
 
 export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
   const bgRef = useRef<HTMLDivElement>(null);
-  const miniRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -16,12 +15,11 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       const { OrbitControls } = await import(
         "three/examples/jsm/controls/OrbitControls.js"
       );
-      if (cancelled || !bgRef.current || !miniRef.current) return;
+      if (cancelled || !bgRef.current) return;
 
       const container = bgRef.current;
-      const miniBox = miniRef.current;
 
-      // ---------- scene / cameras / renderer ----------
+      // ---------- scene / camera / renderer ----------
       const scene = new THREE.Scene();
       const fog = new THREE.FogExp2(0x020e06, 0.012);
       scene.fog = fog;
@@ -39,25 +37,21 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       const focusX = isMobile ? 0 : 20;
       camera.position.set(focusX, 5, 90);
 
-      const miniCamera = new THREE.PerspectiveCamera(
-        50,
-        miniBox.clientWidth / Math.max(miniBox.clientHeight, 1),
-        0.1,
-        1000
-      );
-
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.autoClear = false;
       container.appendChild(renderer.domElement);
 
-      const controls = new OrbitControls(camera, miniBox);
+      // OrbitControls bound to the full canvas. Disabled by default so it doesn't
+      // interfere with page scroll / UI clicks. Enabled while Zen Mode is active.
+      const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.8;
       controls.enablePan = false;
+      controls.enableZoom = false;
+      controls.enabled = false;
       controls.minDistance = 30;
       controls.maxDistance = 150;
       controls.target.set(focusX, 0, 0);
@@ -354,8 +348,10 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
       let mouseX = 0;
       let mouseY = 0;
       let scrollPercent = 0;
+      let zen = false;
 
       const onMouseMove = (e: MouseEvent) => {
+        if (zen) return; // in zen the camera is user-controlled via OrbitControls
         mouseX = (e.clientX / window.innerWidth) * 2 - 1;
         mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
       };
@@ -368,9 +364,21 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
       };
+      const onZen = (e: Event) => {
+        const active = Boolean((e as CustomEvent<boolean>).detail);
+        zen = active;
+        controls.enabled = active;
+        controls.autoRotate = !active;
+        if (!active) {
+          // gently ease group drift back to neutral
+          mouseX = 0;
+          mouseY = 0;
+        }
+      };
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("resize", onResize);
+      window.addEventListener("zen:toggle", onZen as EventListener);
 
       // ---------- render loop ----------
       let raf = 0;
@@ -378,13 +386,20 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         raf = requestAnimationFrame(animate);
         controls.update();
 
-        treeGroup.rotation.y += 0.0015;
-        const targetGX = baseTreeX + mouseX * 5;
-        const targetGY = mouseY * 5;
-        const targetGZ = scrollPercent * 60;
-        treeGroup.position.x += (targetGX - treeGroup.position.x) * 0.05;
-        treeGroup.position.y += (targetGY - treeGroup.position.y) * 0.05;
-        treeGroup.position.z += (targetGZ - treeGroup.position.z) * 0.05;
+        if (!zen) {
+          treeGroup.rotation.y += 0.0015;
+          const targetGX = baseTreeX + mouseX * 5;
+          const targetGY = mouseY * 5;
+          const targetGZ = scrollPercent * 60;
+          treeGroup.position.x += (targetGX - treeGroup.position.x) * 0.05;
+          treeGroup.position.y += (targetGY - treeGroup.position.y) * 0.05;
+          treeGroup.position.z += (targetGZ - treeGroup.position.z) * 0.05;
+        } else {
+          // snap drift to neutral while zen'ing so OrbitControls fully owns framing
+          treeGroup.position.x += (baseTreeX - treeGroup.position.x) * 0.08;
+          treeGroup.position.y += (0 - treeGroup.position.y) * 0.08;
+          treeGroup.position.z += (0 - treeGroup.position.z) * 0.08;
+        }
 
         const pulse = 1 + Math.sin(Date.now() * 0.002) * 0.06;
         glowSphere.scale.set(pulse, pulse, pulse);
@@ -405,56 +420,7 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         yellowPointMat.opacity = yPulse;
         yellowLineMat.opacity = 0.35 + 0.25 * Math.sin(t * 1.5);
 
-        renderer.setClearColor(0x000000, 0);
-        renderer.clear();
-
-        // --- main viewport ---
-        renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-        renderer.setScissor(0, 0, window.innerWidth, window.innerHeight);
-        renderer.setScissorTest(true);
         renderer.render(scene, camera);
-
-        // --- mini-map viewport: no fog, framed to fit whole tree ---
-        if (miniBox) {
-          const rect = miniBox.getBoundingClientRect();
-          const cw = renderer.domElement.clientWidth;
-          const ch = renderer.domElement.clientHeight;
-          const canvasBottom = ch - rect.bottom;
-          if (
-            rect.width > 0 &&
-            rect.height > 0 &&
-            rect.bottom >= 0 &&
-            rect.top <= ch &&
-            rect.right >= 0 &&
-            rect.left <= cw
-          ) {
-            renderer.setViewport(rect.left, canvasBottom, rect.width, rect.height);
-            renderer.setScissor(rect.left, canvasBottom, rect.width, rect.height);
-
-            miniCamera.aspect = rect.width / rect.height;
-            miniCamera.updateProjectionMatrix();
-
-            // sync orientation with main camera but pull back to fit full tree
-            const dir = camera.position
-              .clone()
-              .sub(controls.target)
-              .normalize();
-            miniCamera.position
-              .copy(controls.target)
-              .add(dir.multiplyScalar(85));
-            miniCamera.lookAt(controls.target);
-
-            // remove fog so the mini tree is crisp and clearly visible
-            const savedFog = scene.fog;
-            scene.fog = null;
-
-            renderer.setClearColor(0x0b1f13, 1.0);
-            renderer.clear(true, true, false);
-            renderer.render(scene, miniCamera);
-
-            scene.fog = savedFog;
-          }
-        }
       };
       animate();
 
@@ -463,6 +429,7 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", onResize);
+        window.removeEventListener("zen:toggle", onZen as EventListener);
         controls.dispose();
         renderer.dispose();
         particlesGeo.dispose();
@@ -511,36 +478,6 @@ export default function ThreeTree({ keywords }: { keywords: KeywordHit[] }) {
             "radial-gradient(circle at center, transparent 20%, #020e06 120%)",
         }}
       />
-      <aside className="fixed right-3 top-24 z-20 w-[180px] overflow-hidden rounded-xl border border-white/10 bg-black/45 shadow-2xl backdrop-blur-md md:right-6 md:w-[230px]">
-        <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-3 py-2">
-          <div className="flex items-center gap-2 text-white/80">
-            <svg
-              className="h-3.5 w-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"
-              />
-            </svg>
-            <span className="font-mono text-[10px] uppercase tracking-widest">
-              drag to rotate
-            </span>
-          </div>
-        </div>
-        <div
-          ref={miniRef}
-          className="relative h-[140px] w-full cursor-move md:h-[170px]"
-        />
-        <div className="border-t border-white/10 bg-black/30 px-3 py-1.5 font-mono text-[10px] text-white/60">
-          <span className="text-amber-300">●</span> written
-          <span className="ml-3 text-emerald-300">●</span> not yet
-        </div>
-      </aside>
     </>
   );
 }

@@ -6,7 +6,7 @@ export default function PostList({ posts }: { posts: Post[] }) {
   if (posts.length === 0) {
     return (
       <p className="mt-4 rounded-lg border border-dashed border-ink-line p-8 text-center font-mono text-[12px] text-ink-faint">
-        수집 중입니다. coming soon.
+        coming soon.
       </p>
     );
   }

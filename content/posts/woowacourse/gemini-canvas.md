@@ -1,5 +1,8 @@
 ---
 title: "우테코 - 1주차 Gemini Canvas 웹앱 만들기 미션 회고"
+category: "wooteco"
+slug: "mission-1"
+thumb: "/images/wooteco/mission-1.png"
 date: 2026-03-08
 description: "제미나이 캔버스로 웹앱을 만들어본 첫 주 — AI와 협업하는 감각을 되짚다."
 tags: ["우테코", "제미나이", "AI", "웹앱"]

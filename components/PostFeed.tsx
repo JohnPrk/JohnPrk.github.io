@@ -9,11 +9,24 @@ type Filter = "all" | CategorySlug;
 
 export default function PostFeed({ posts }: { posts: PostMeta[] }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
-    if (filter === "all") return posts;
-    return posts.filter((p) => p.category === filter);
-  }, [posts, filter]);
+    const base =
+      filter === "all" ? posts : posts.filter((p) => p.category === filter);
+    const needle = q.trim().toLowerCase();
+    if (!needle) return base;
+    return base.filter((p) => {
+      const hay = [
+        p.title,
+        p.description ?? "",
+        (p.tags ?? []).join(" "),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [posts, filter, q]);
 
   const counts = useMemo(() => {
     const m: Record<string, number> = { all: posts.length };
@@ -33,6 +46,49 @@ export default function PostFeed({ posts }: { posts: PostMeta[] }) {
 
   return (
     <section className="flex flex-col gap-4">
+      {/* search bar */}
+      <label className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3.5 py-2 backdrop-blur-sm focus-within:border-white/25">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          className="shrink-0 text-ink-faint"
+          aria-hidden
+        >
+          <circle
+            cx="11"
+            cy="11"
+            r="7"
+            stroke="currentColor"
+            strokeWidth="2"
+          />
+          <path
+            d="m20 20-3.5-3.5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="제목, 설명, 태그 검색…"
+          className="w-full bg-transparent font-mono text-[12.5px] text-ink placeholder:text-ink-faint focus:outline-none"
+          aria-label="search posts"
+        />
+        {q && (
+          <button
+            type="button"
+            onClick={() => setQ("")}
+            className="font-mono text-[13px] text-ink-faint hover:text-white"
+            aria-label="clear search"
+          >
+            ×
+          </button>
+        )}
+      </label>
+
       {/* category tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-3">
         {TABS.map((t) => {
@@ -82,7 +138,7 @@ export default function PostFeed({ posts }: { posts: PostMeta[] }) {
 
       {filtered.length === 0 ? (
         <p className="rounded-lg border border-dashed border-white/10 bg-black/30 p-8 text-center font-mono text-[12px] text-ink-faint">
-          수집 중입니다. coming soon.
+          {q.trim() ? `"${q.trim()}"에 대한 결과가 없습니다.` : "coming soon."}
         </p>
       ) : (
         <ul className="divide-y divide-white/10">

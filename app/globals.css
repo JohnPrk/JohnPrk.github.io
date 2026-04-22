@@ -279,3 +279,32 @@ body {
   0%, 100% { transform: translate(0, 0); }
   50% { transform: translate(0, -2px); }
 }
+
+/* -----------------------------------------------------------
+   zen / observe mode — fade the whole UI so the 3D tree is
+   the only thing on screen; the close button stays visible.
+   ----------------------------------------------------------- */
+.zen-hide {
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+body.zen-mode .zen-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+/* strip the header bar's own bg/border so only the floating button remains */
+body.zen-mode header {
+  background: transparent !important;
+  border-color: transparent !important;
+  backdrop-filter: none !important;
+  pointer-events: none;
+}
+body.zen-mode header button {
+  pointer-events: auto;
+}
+/* let drags on the full-screen canvas behave like a grab handle */
+body.zen-mode {
+  cursor: grab;
+}
+body.zen-mode:active {
+  cursor: grabbing;
+}

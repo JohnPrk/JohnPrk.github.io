@@ -15,11 +15,9 @@ export default function Home() {
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">
             yggdrasil · {new Date().getFullYear()}
           </p>
-          <h1 className="mt-3 text-[24px] font-bold leading-tight tracking-[-0.01em] md:text-[30px]">
-            a garden of code, ideas, and AI.
-            <br />
-            <span className="text-ink-muted">growing one post at a time.</span>
-          </h1>
+          <h2 className="mt-3 text-[20px] font-bold leading-tight tracking-[-0.01em] md:text-[25px]">
+            흩어지지 않는 경험, 무한히 연결되고 확장되는 지식
+          </h2>
           <div className="mt-5 max-w-2xl space-y-4 text-[14px] leading-[1.95] text-ink-soft">
             <p>
               거대하고 끝없이 뻗어나가는 기술 생태계 속에서, 오늘 마주한 문제들을 묵묵히 하나씩 해결해 나갑니다.

@@ -42,7 +42,7 @@ export default function CategorySection({
       </div>
       {posts.length === 0 ? (
         <div className="rounded-lg border border-dashed border-white/10 bg-black/30 p-8 text-center font-mono text-[12px] text-ink-faint">
-          수집 중입니다. coming soon.
+          coming soon.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
