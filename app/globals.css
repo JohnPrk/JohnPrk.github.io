@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "highlight.js/styles/github.css";
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #fff;
+  color: #111;
+}
+
+.prose-post {
+  max-width: 720px;
+  line-height: 1.75;
+  font-size: 16px;
+}
+.prose-post h1 { font-size: 1.75rem; font-weight: 700; margin: 1.6em 0 0.6em; }
+.prose-post h2 { font-size: 1.35rem; font-weight: 700; margin: 1.6em 0 0.5em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+.prose-post h3 { font-size: 1.1rem; font-weight: 700; margin: 1.4em 0 0.4em; }
+.prose-post p  { margin: 0.9em 0; }
+.prose-post ul, .prose-post ol { margin: 0.9em 0; padding-left: 1.4em; }
+.prose-post ul { list-style: disc; }
+.prose-post ol { list-style: decimal; }
+.prose-post li { margin: 0.25em 0; }
+.prose-post a  { color: #2563eb; text-decoration: underline; text-underline-offset: 3px; }
+.prose-post blockquote {
+  border-left: 3px solid #d4d4d4;
+  color: #555;
+  padding: 0.2em 0 0.2em 1em;
+  margin: 1em 0;
+}
+.prose-post code {
+  background: #f4f4f5;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.prose-post pre {
+  background: #f6f8fa;
+  border: 1px solid #eaecef;
+  border-radius: 6px;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  font-size: 0.88em;
+  margin: 1em 0;
+}
+.prose-post pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+.prose-post img { max-width: 100%; border-radius: 6px; }
+.prose-post hr { border: 0; border-top: 1px solid #eee; margin: 2em 0; }
+.prose-post table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+.prose-post th, .prose-post td { border: 1px solid #eaecef; padding: 0.4em 0.6em; }
+.prose-post th { background: #fafafa; }
