@@ -31,12 +31,16 @@ body {
    post body typography (dark, readable over glass panel)
    ----------------------------------------------------------- */
 .prose-post {
-  max-width: 720px;
-  line-height: 1.85;
-  font-size: 16.5px;
+  max-width: 760px;
+  line-height: 1.9;
+  font-size: 13px;
+  letter-spacing: -0.003em;
   color: #e2e8f0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
-.prose-post > * + * { margin-top: 1em; }
+.prose-post > * + * { margin-top: 1.5em; }
+.prose-post > :first-child { margin-top: 2.2em; }
 
 .prose-post h1 {
   font-size: 2.1rem;
@@ -59,7 +63,7 @@ body {
 .prose-post h3 {
   font-size: 1.3rem;
   font-weight: 500;
-  margin: 1.7em 0 0.45em;
+  margin: 3.2em 0 0.7em;
   letter-spacing: -0.003em;
   line-height: 1.35;
   color: #e2e8f0;
@@ -70,16 +74,16 @@ body {
   margin: 1.4em 0 0.4em;
   color: #cbd5e1;
 }
-.prose-post p { margin: 0.9em 0; }
+.prose-post p { margin: 1.8em 0; }
 
 .prose-post ul,
 .prose-post ol {
-  margin: 0.9em 0;
+  margin: 1.1em 0;
   padding-left: 1.75em;
 }
 .prose-post ul { list-style: disc; }
 .prose-post ol { list-style: decimal; }
-.prose-post li { margin: 0.35em 0; padding-left: 0.25em; }
+.prose-post li { margin: 0.45em 0; padding-left: 0.25em; line-height: 1.75; }
 .prose-post li::marker { color: #94a3b8; }
 .prose-post li > p { margin: 0.25em 0; }
 .prose-post ul ul,
@@ -101,32 +105,33 @@ body {
 .prose-post a:hover { color: #c7d2fe; text-decoration-thickness: 2px; }
 
 .prose-post blockquote {
-  border-left: 3px solid #22c55e;
-  background: rgba(34, 197, 94, 0.08);
-  color: #d1d5db;
-  padding: 0.5em 0.2em 0.5em 1em;
-  margin: 1.2em 0;
+  border-left: 3px solid #94a3b8; /* 테두리: 눈에 띄면서도 편안한 밝은 슬레이트/회색 */
+  background: rgba(148, 163, 184, 0.2); /* 배경: 테두리에 맞춘 은은한 톤 */
+  color: #e2e8f0; /* 글자색: 배경에 묻히지 않도록 살짝 더 밝게 */
+  padding: 0.05em 0.2em 0.05em 0.8em; /* 기존(0.5em)보다 위아래 여백을 줄여서 크기를 아담하게 */
+  font-size: 1.0em; /* 글자 크기를 아주 살짝 줄여서 덜 뚱뚱해 보이게 */
+  margin: 1.0em 0;
   border-radius: 0 6px 6px 0;
-  font-style: normal;
+  font-style: italic;
 }
 
 .prose-post code {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f9a8d4;
+  background: rgba(63, 63, 70, 0.8);
+  color: #e0af3d;
   padding: 0.12em 0.4em;
   border-radius: 4px;
   font-size: 0.88em;
   font-family: "JetBrains Mono", ui-monospace, monospace;
 }
 .prose-post pre {
-  background: rgba(2, 14, 6, 0.7);
+  background: rgba(63, 63, 70, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 1em 1.15em;
   overflow-x: auto;
   font-size: 0.88em;
   line-height: 1.65;
-  margin: 1.2em 0;
+  margin: 2.3em 0;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   backdrop-filter: blur(4px);
 }
@@ -268,7 +273,7 @@ body {
 
 /* glass panel helper */
 .glass {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(8px);
   border-radius: 1rem;

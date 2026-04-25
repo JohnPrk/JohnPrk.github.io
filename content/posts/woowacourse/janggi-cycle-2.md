@@ -37,8 +37,8 @@ tags: ["우테코", "장기", "객체지향", "DB"]
 
 ```
 public interface PalaceMovement {
- boolean isPalace(Coordination from, Coordination to);
- void validateRule(Coordination from, Coordination to);
+    boolean isPalace(Coordination from, Coordination to);
+    void validateRule(Coordination from, Coordination to);
 }
 ```
 
@@ -47,11 +47,11 @@ public interface PalaceMovement {
 ```
 @Override
 public void validateRule(Coordination from, Coordination to) {
- if (palaceMovement.isPalace(from, to)) {
- palaceMovement.validateRule(from, to);
- return;
- }
- validateNormalRule(from, to);
+    if (palaceMovement.isPalace(from, to)) {
+        palaceMovement.validateRule(from, to);
+        return;
+    }
+    validateNormalRule(from, to);
 }
 
 protected abstract void validateNormalRule(Coordination from, Coordination to);
@@ -64,6 +64,7 @@ protected abstract void validateNormalRule(Coordination from, Coordination to);
 결과적으로 궁성이라는 새 규칙을 추가하면서 기존 기물 클래스의 이동 규칙은 거의 건드리지 않을 수 있었다. 나중에 새로운 궁성 이동 유형이 필요해도 구현체만 하나 더 만들면 됐다.
 
 처음부터 OCP를 의식하고 짠 건 아니었다. 요구사항의 부피가 커서 우선 돌아가는 구현을 만들고 싶었을 뿐이고, 기존 코드를 덜 건드리는 길을 따라가다 보니 이 구조가 남았다. 구현을 다 끝내고 돌아보니 책에서 읽었던 OCP가 실제로 되는 게 신기했다.
+
 
 ### 첫 번째 리뷰 — DB라는 낯선 땅
 
@@ -143,8 +144,8 @@ DB에 대한 리뷰는 전부 "이걸 왜 이렇게 쓰셨어요?"로 모였고,
 
 ```
 public abstract class DiagonalPalaceMovementPiece extends Piece {
- protected final PalaceMovement palaceMovement;
- // ...
+    protected final PalaceMovement palaceMovement;
+    // ...
 }
 ```
 
@@ -154,8 +155,8 @@ public abstract class DiagonalPalaceMovementPiece extends Piece {
 
 ```
 public abstract class DiagonalPalaceMovementPiece extends Piece {
- private final PalaceMovement palaceMovement;
- // ...
+    private final PalaceMovement palaceMovement;
+    // ...
 }
 ```
 
@@ -163,9 +164,9 @@ public abstract class DiagonalPalaceMovementPiece extends Piece {
 
 ```
 public abstract class Piece {
- protected final Team team;
- // ...
- protected abstract void validateNormalRule(Coordination from, Coordination to);
+    protected final Team team;
+    // ...
+    protected abstract void validateNormalRule(Coordination from, Coordination to);
 }
 ```
 
@@ -186,8 +187,8 @@ public abstract class Piece {
 
 ```
 try (PreparedStatement stmt = connection.prepareStatement("...");
- ResultSet rs = stmt.executeQuery()) {
- // ... 로직 수행 ...
+ResultSet rs = stmt.executeQuery()) {
+    // ... 로직 수행 ...
 } // 블록 종료 시 stmt와 rs 모두 자동으로 안전하게 close() 됨
 ```
 
@@ -196,15 +197,15 @@ try (PreparedStatement stmt = connection.prepareStatement("...");
 ```
 Connection connection = null;
 try {
- connection = connectionProvider.getConnection();
- connection.setAutoCommit(false);
- // ... 여러 서비스 조합 ...
- connection.commit();
+    connection = connectionProvider.getConnection();
+    connection.setAutoCommit(false);
+    // ... 여러 서비스 조합 ...
+    connection.commit();
 } catch (SQLException e) {
- rollback(connection);
- throw new RuntimeException(e);
+    rollback(connection);
+    throw new RuntimeException(e);
 } finally {
- close(connection);
+    close(connection);
 }
 ```
 
@@ -237,21 +238,21 @@ Repository는 "쿼리 한 번 돌리고 블록을 빠져나간다"가 전부라 
 
 ```
 public interface ConnectionProvider {
- Connection getConnection() throws SQLException;
+    Connection getConnection() throws SQLException;
 }
 
 public class SQLiteConnectionProvider implements ConnectionProvider {
- private static final String JDBC_URL = "jdbc:sqlite:janggi.db";
+    private static final String JDBC_URL = "jdbc:sqlite:janggi.db";
 
- @Override
- public Connection getConnection() throws SQLException {
- return DriverManager.getConnection(JDBC_URL);
- }
+    @Override
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(JDBC_URL);
+    }
 }
 
 public class FacadeService {
- private final ConnectionProvider connectionProvider;
- // ...
+    private final ConnectionProvider connectionProvider;
+    // ...
 }
 ```
 
@@ -259,19 +260,19 @@ public class FacadeService {
 
 ```
 public void save(List pieceSnapshots, String turn) {
- Connection connection = null;
- try {
- connection = connectionProvider.getConnection();
- connection.setAutoCommit(false);
- int gameId = gameService.save(connection, turn);
- janggiService.save(connection, gameId, pieceSnapshots);
- connection.commit();
- } catch (SQLException e) {
- rollback(connection);
- throw new RuntimeException(e);
- } finally {
- close(connection);
- }
+    Connection connection = null;
+    try {
+        connection = connectionProvider.getConnection();
+        connection.setAutoCommit(false);
+        int gameId = gameService.save(connection, turn);
+        janggiService.save(connection, gameId, pieceSnapshots);
+        connection.commit();
+    } catch (SQLException e) {
+        rollback(connection);
+        throw new RuntimeException(e);
+    } finally {
+        close(connection);
+    }
 }
 ```
 
@@ -294,16 +295,16 @@ public void save(List pieceSnapshots, String turn) {
 ```
 public abstract class DiagonalPalaceMovementPiece extends Piece {
 
- @Override
- public void validateRule(Coordination from, Coordination to) {
- if (palaceMovement.isPalace(from, to)) {
- palaceMovement.validateRule(from, to);
- return;
- }
- validateNormalRule(from, to);
- }
+    @Override
+    public void validateRule(Coordination from, Coordination to) {
+        if (palaceMovement.isPalace(from, to)) {
+            palaceMovement.validateRule(from, to);
+            return;
+        }
+        validateNormalRule(from, to);
+    }
 
- protected abstract void validateNormalRule(Coordination from, Coordination to);
+    protected abstract void validateNormalRule(Coordination from, Coordination to);
 }
 ```
 
@@ -350,11 +351,11 @@ public abstract class DiagonalPalaceMovementPiece extends Piece {
 
 ```
 public void move(Coordination from, Coordination to) {
- Piece piece = board.get(from);
- validateRule(from, to, piece); // 기물의 이동 규칙
- validatePiecesOnPath(from, to, piece); // 경로 위 다른 기물 체크
- validateTarget(to, piece); // 도착지 검증
- resolve(from, to, piece);
+    Piece piece = board.get(from);
+    validateRule(from, to, piece); // 기물의 이동 규칙
+    validatePiecesOnPath(from, to, piece); // 경로 위 다른 기물 체크
+    validateTarget(to, piece); // 도착지 검증
+    resolve(from, to, piece);
 }
 ```
 

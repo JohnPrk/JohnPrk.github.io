@@ -11,7 +11,10 @@ export default function Markdown({ source }: { source: string }) {
     <div className="prose-post">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
-        rehypePlugins={[rehypeSlug, rehypeHighlight]}
+        rehypePlugins={[
+          rehypeSlug,
+          [rehypeHighlight, { detect: true, ignoreMissing: true }],
+        ]}
       >
         {source}
       </ReactMarkdown>

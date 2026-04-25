@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThreeTree keywords={keywords} />
         <div className="relative z-0 mx-auto w-full max-w-6xl px-4 pb-16 pt-5 sm:px-6 md:pt-7">
           <Header />
-          <main className="zen-hide mt-7 md:mt-10">{children}</main>
+          <main className="zen-hide mt-16 md:mt-20">{children}</main>
           <div className="zen-hide">
             <Footer />
           </div>

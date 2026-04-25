@@ -121,10 +121,10 @@ LMS 어디에도 '객체지향 생활체조'라는 말이 명시적으로 나오
 
 ```
 public enum Suit {
- HEART("하트"),
- DIAMOND("다이아몬드"),
- SPADE("스페이드"),
- CLUB("클로버");
+    HEART("하트"),
+    DIAMOND("다이아몬드"),
+    SPADE("스페이드"),
+    CLUB("클로버");
 }
 ```
 
@@ -140,7 +140,7 @@ public enum Suit {
 
 ```
 public class Player extends Participant {
- private boolean wantsHit = true;
+    private boolean wantsHit = true;
 }
 ```
 
@@ -154,10 +154,10 @@ Player 자체에는 변수가 하나밖에 없으니 괜찮다고 생각했는�
 
 ```
 public class BlackjackController {
- private static final int INIT_ROUND = 2;
- private final InputView inputView;
- private final OutputView outputView;
- private final Map hitDecision = new HashMap<>();
+    private static final int INIT_ROUND = 2;
+    private final InputView inputView;
+    private final OutputView outputView;
+    private final Map hitDecision = new HashMap<>();
 }
 ```
 
@@ -175,13 +175,13 @@ public class BlackjackController {
 
 ```
 public static GameResult of(final Score playerScore, final Score dealerScore) {
- if (playerScore.isBust()) {
- return LOSE;
- }
- if (dealerScore.isBust()) {
- return WIN;
- }
- return compare(playerScore, dealerScore);
+    if (playerScore.isBust()) {
+        return LOSE;
+    }
+    if (dealerScore.isBust()) {
+        return WIN;
+    }
+    return compare(playerScore, dealerScore);
 }
 ```
 
@@ -208,9 +208,9 @@ public static GameResult of(final Score playerScore, final Score dealerScore) {
 ```
 @Override
 public boolean equals(Object o) {
- if (o == null || getClass() != o.getClass()) return false;
- Card card = (Card) o;
- return suit() == card.suit() && rank() == card.rank();
+    if (o == null || getClass() != o.getClass()) return false;
+    Card card = (Card) o;
+    return suit() == card.suit() && rank() == card.rank();
 }
 ```
 
@@ -239,7 +239,7 @@ public void run(final Consumer> shuffleStrategy) { ... }
 // 개선 방향
 @FunctionalInterface
 public interface ShuffleStrategy {
- void shuffle(List cards);
+    void shuffle(List cards);
 }
 ```
 

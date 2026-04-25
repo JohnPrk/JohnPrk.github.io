@@ -32,19 +32,19 @@ tags: ["우테코", "블랙잭", "객체지향", "DDD"]
 ```
 // Players.java - participant 패키지가 Money(domain.money)에 의존
 public record Players(List players) {
- public Map placeWagers(WagerReader wagerReader) {
- Map wagers = new LinkedHashMap<>();
- players.forEach(player -> {
- Money wager = wagerReader.wagerOf(player);
- wagers.put(player, wager);
- });
- return wagers;
- }
+    public Map placeWagers(WagerReader wagerReader) {
+        Map wagers = new LinkedHashMap<>();
+        players.forEach(player -> {
+            Money wager = wagerReader.wagerOf(player);
+            wagers.put(player, wager);
+        });
+        return wagers;
+    }
 }
 
 @FunctionalInterface
 public interface WagerReader {
- Money wagerOf(Player player);
+    Money wagerOf(Player player);
 }
 ```
 
@@ -63,12 +63,12 @@ Players 내부에서 순회를 캡슐화하면서도 UI 책임은 외부로 깔�
 ```
 // 컨트롤러 - 배팅 수집 책임을 가짐
 private Map placeWagers(Players players) {
- Map wagers = new LinkedHashMap<>();
- for (Player player : players.players()) {
- int amount = inputView.readWager(player);
- wagers.put(player, new Money(amount));
- }
- return wagers;
+    Map wagers = new LinkedHashMap<>();
+    for (Player player : players.players()) {
+        int amount = inputView.readWager(player);
+        wagers.put(player, new Money(amount));
+    }
+    return wagers;
 }
 ```
 
@@ -95,15 +95,15 @@ Money 객체를 다루면서 버그를 경험했다.
 ```
 // Before: 상태를 직접 변경하는 가변 Money
 public class Money {
- private int value; // final이 아님
+    private int value; // final이 아님
 
- public void add(Money money) {
- this.value += money.value; // 자기 자신의 상태를 직접 변경
- }
+    public void add(Money money) {
+        this.value += money.value; // 자기 자신의 상태를 직접 변경
+    }
 
- public void multiply(int multiplier) {
- this.value *= multiplier; // 자기 자신의 상태를 직접 변경
- }
+    public void multiply(int multiplier) {
+        this.value *= multiplier; // 자기 자신의 상태를 직접 변경
+    }
 }
 ```
 
@@ -131,13 +131,13 @@ but was: blackjack.domain.money.Money@ffffd8f0
 // After: 새로운 객체를 반환하는 불변 Money
 public record Money(int value) {
 
- public Money add(Money money) {
- return new Money(this.value + money.value()); // 완전히 새로운 객체 반환
- }
+    public Money add(Money money) {
+        return new Money(this.value + money.value()); // 완전히 새로운 객체 반환
+    }
 
- public Money multiply(double multiplier) {
- return new Money((int) (this.value * multiplier)); // 완전히 새로운 객체 반환
- }
+    public Money multiply(double multiplier) {
+        return new Money((int) (this.value * multiplier)); // 완전히 새로운 객체 반환
+    }
 }
 ```
 
@@ -164,12 +164,12 @@ public record Money(int value) {
 ```
 // GameResults.java (블랙잭 판정)
 if (player.isBlackjack() && dealer.isBlackjack()) {
- gameResults.put(player, GameResult.DRAW);
+    gameResults.put(player, GameResult.DRAW);
 } // ...
 
 // GameResultCalculator.java (일반 Score 비교)
 public GameResult calculate(final Score playerScore, final Score dealerScore) {
- // 점수 비교 및 버스트 판정 로직
+    // 점수 비교 및 버스트 판정 로직
 }
 ```
 
@@ -180,13 +180,13 @@ public GameResult calculate(final Score playerScore, final Score dealerScore) {
 ```
 // GameResultCalculator.java (블랙잭 포함 전체 판정)
 public GameResult calculate(Player player, Dealer dealer) {
- if (player.isBlackjack() && dealer.isBlackjack()) {
- return GameResult.DRAW;
- }
- if (player.isBlackjack()) {
- return GameResult.BLACKJACK;
- }
- // ...버스트 및 점수 비교
+    if (player.isBlackjack() && dealer.isBlackjack()) {
+        return GameResult.DRAW;
+    }
+    if (player.isBlackjack()) {
+        return GameResult.BLACKJACK;
+    }
+    // ...버스트 및 점수 비교
 }
 ```
 
@@ -213,14 +213,14 @@ GameResult를 설계하면서 자바의 enum이 가질 수 있는 행위의 범�
 ```
 // Before: 외부(GameResults)에서 if문으로 수익 계산
 private int calculatePlayerProfit(Player player, int wager) {
- GameResult gameResult = playerResults.get(player);
- if (gameResult == GameResult.WIN) {
- return wager;
- }
- if (gameResult == GameResult.LOSE) {
- return -wager;
- }
- return 0; // DRAW
+    GameResult gameResult = playerResults.get(player);
+    if (gameResult == GameResult.WIN) {
+        return wager;
+    }
+    if (gameResult == GameResult.LOSE) {
+        return -wager;
+    }
+    return 0; // DRAW
 }
 ```
 
@@ -231,17 +231,17 @@ private int calculatePlayerProfit(Player player, int wager) {
 ```
 // After: enum이 배율 상태와 계산 행위를 가짐
 public enum GameResult {
- BLACKJACK(1.5), WIN(1), DRAW(0), LOSE(-1);
+    BLACKJACK(1.5), WIN(1), DRAW(0), LOSE(-1);
 
- private final double multiplier;
+    private final double multiplier;
 
- GameResult(double multiplier) {
- this.multiplier = multiplier;
- }
+    GameResult(double multiplier) {
+        this.multiplier = multiplier;
+    }
 
- public Money profitOf(Money wager) {
- return wager.multiply(multiplier);
- }
+    public Money profitOf(Money wager) {
+        return wager.multiply(multiplier);
+    }
 }
 ```
 
@@ -283,30 +283,30 @@ public enum GameResult {
 // blackjack.domain.profit.ProfitCalculator
 public class ProfitCalculator {
 
- public ProfitResults calculate(GameResults gameResults, Wagers wagers) {
- Map playerProfits = new LinkedHashMap<>();
+    public ProfitResults calculate(GameResults gameResults, Wagers wagers) {
+        Map playerProfits = new LinkedHashMap<>();
 
- // 1. 플레이어들의 수익 계산 (게임 결과와 베팅 금액을 조합)
- for (Player player : gameResults.getPlayers()) {
- GameResult result = gameResults.getResultOf(player);
- Money wager = wagers.getWagerOf(player);
+        // 1. 플레이어들의 수익 계산 (게임 결과와 베팅 금액을 조합)
+        for (Player player : gameResults.getPlayers()) {
+            GameResult result = gameResults.getResultOf(player);
+            Money wager = wagers.getWagerOf(player);
 
- playerProfits.put(player, result.profitOf(wager));
- }
+            playerProfits.put(player, result.profitOf(wager));
+        }
 
- // 2. 딜러의 수익 계산 (플레이어들 수익의 반대)
- Money dealerProfit = calculateDealerProfit(playerProfits.values());
+        // 2. 딜러의 수익 계산 (플레이어들 수익의 반대)
+        Money dealerProfit = calculateDealerProfit(playerProfits.values());
 
- return new ProfitResults(playerProfits, dealerProfit);
- }
+        return new ProfitResults(playerProfits, dealerProfit);
+    }
 
- private Money calculateDealerProfit(Collection playerProfits) {
- // 플레이어들이 딴 돈만큼 딜러는 잃고, 잃은 만큼 얻는다
- int totalPlayerProfit = playerProfits.stream()
- .mapToInt(Money::value)
- .sum();
- return new Money(-totalPlayerProfit);
- }
+    private Money calculateDealerProfit(Collection playerProfits) {
+        // 플레이어들이 딴 돈만큼 딜러는 잃고, 잃은 만큼 얻는다
+        int totalPlayerProfit = playerProfits.stream()
+        .mapToInt(Money::value)
+        .sum();
+        return new Money(-totalPlayerProfit);
+    }
 }
 ```
 

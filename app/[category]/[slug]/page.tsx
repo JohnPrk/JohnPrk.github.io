@@ -22,7 +22,10 @@ export default function PostPage({
   return (
     <article className="mx-auto max-w-[760px] md:mr-[260px]">
       <div className="glass px-6 py-8 md:px-10 md:py-10">
-        <div className="mb-5 flex items-center gap-2 font-mono text-[12px] text-ink-muted">
+        <h1 className="mb-3 text-[28px] font-bold leading-tight tracking-[-0.01em] text-white">
+          {post.title}
+        </h1>
+        <div className="mb-8 flex items-center gap-2 font-mono text-[12px] text-ink-muted">
           <Link
             href={`/${post.category}/`}
             className="inline-flex items-center hover:text-white"
@@ -33,9 +36,6 @@ export default function PostPage({
           <span className="text-ink-faint">·</span>
           <time>{post.date}</time>
         </div>
-        <h1 className="mb-8 text-[26px] font-bold leading-tight tracking-[-0.01em] text-white">
-          {post.title}
-        </h1>
         <Markdown source={post.content} />
         {post.tags && post.tags.length > 0 ? (
           <div className="mt-10 flex flex-wrap gap-1.5 border-t border-white/10 pt-5 font-mono text-[11px] text-ink-faint">

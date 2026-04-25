@@ -199,35 +199,35 @@ public void validateMovable(Coordination from, Coordination to, Map board) {
 
 ```
 public void move(Coordination from, Coordination to) {
- Piece piece = board.get(from);
+    Piece piece = board.get(from);
 
- validateRule(from, to, piece);
- validatePiecesOnPath(from, to, piece);
- validateTarget(to, piece);
+    validateRule(from, to, piece);
+    validatePiecesOnPath(from, to, piece);
+    validateTarget(to, piece);
 
- resolve(from, to, piece);
+    resolve(from, to, piece);
 }
 
 private void validateRule(Coordination from, Coordination to, Piece piece) {
- piece.validateRule(from, to);
+    piece.validateRule(from, to);
 }
 
 private void validatePiecesOnPath(Coordination from, Coordination to, Piece piece) {
- List path = piece.resolvePath(from, to);
- List piecesOnPath = path.stream()
- .map(board::get)
- .filter(p -> !p.isEmpty())
- .toList();
- piece.validatePath(piecesOnPath);
+    List path = piece.resolvePath(from, to);
+    List piecesOnPath = path.stream()
+    .map(board::get)
+    .filter(p -> !p.isEmpty())
+    .toList();
+    piece.validatePath(piecesOnPath);
 }
 
 private void validateTarget(Coordination to, Piece piece) {
- piece.validateTarget(board.get(to));
+    piece.validateTarget(board.get(to));
 }
 
 private void resolve(Coordination from, Coordination to, Piece piece) {
- board.put(to, piece);
- board.put(from, new EmptyPiece(Team.NONE));
+    board.put(to, piece);
+    board.put(from, new EmptyPiece(Team.NONE));
 }
 ```
 
