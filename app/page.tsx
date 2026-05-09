@@ -47,12 +47,16 @@ export default function Home() {
                         ? "#d97706"
                         : c.slug === "ai"
                         ? "#7c3aed"
+                        : c.slug === "spring"
+                        ? "#06b6d4"
                         : "#059669",
                     boxShadow:
                       c.slug === "woowacourse"
                         ? "0 0 8px #d97706"
                         : c.slug === "ai"
                         ? "0 0 8px #7c3aed"
+                        : c.slug === "spring"
+                        ? "0 0 8px #06b6d4"
                         : "0 0 8px #059669",
                   }}
                 />

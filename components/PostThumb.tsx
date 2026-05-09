@@ -22,6 +22,12 @@ const CAT_STYLES: Record<
     accent: "#059669",
     glyph: "❖",
   },
+  spring: {
+    from: "#ecfeff",
+    to: "#cffafe",
+    accent: "#06b6d4",
+    glyph: "❋",
+  },
 };
 
 function hashNum(s: string): number {

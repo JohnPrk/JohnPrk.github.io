@@ -15,6 +15,8 @@ export default function CategorySection({
       ? "#d97706"
       : category === "ai"
       ? "#7c3aed"
+      : category === "spring"
+      ? "#06b6d4"
       : "#059669";
   return (
     <section className="glass p-5 md:p-6">

@@ -113,12 +113,16 @@ export default function PostFeed({ posts }: { posts: PostMeta[] }) {
                         ? "#d97706"
                         : t.cat === "ai"
                         ? "#7c3aed"
+                        : t.cat === "spring"
+                        ? "#06b6d4"
                         : "#059669",
                     boxShadow:
                       t.cat === "woowacourse"
                         ? "0 0 8px #d97706"
                         : t.cat === "ai"
                         ? "0 0 8px #7c3aed"
+                        : t.cat === "spring"
+                        ? "0 0 8px #06b6d4"
                         : "0 0 8px #059669",
                   }}
                 />
@@ -157,12 +161,16 @@ export default function PostFeed({ posts }: { posts: PostMeta[] }) {
                           ? "#d97706"
                           : p.category === "ai"
                           ? "#7c3aed"
+                          : p.category === "spring"
+                          ? "#06b6d4"
                           : "#059669",
                       boxShadow:
                         p.category === "woowacourse"
                           ? "0 0 8px #d97706"
                           : p.category === "ai"
                           ? "0 0 8px #7c3aed"
+                          : p.category === "spring"
+                          ? "0 0 8px #06b6d4"
                           : "0 0 8px #059669",
                     }}
                   />
