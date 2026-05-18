@@ -1,11 +1,11 @@
 ---
-title: "@Transactional 한 줄을 따라가다 만난 프록시, 두 인터페이스, 그리고 롤백의 책임 소재"
+title: "@Transactional 한 줄을 따라가다 만난 프록시, ThreadLocal, 그리고 롤백의 책임 소재"
 category: "spring"
 slug: "spring-transactional-internals"
 num: 10
 date: 2026-05-18
-description: "우테코 룸이스케이프 미션에서 서비스에 @Transactional을 막 적용한 직후, 컨테이너 빈을 꺼내봤더니 $$SpringCGLIB$$0이 붙어 있었다. 거기서부터 따라가니 AOP 프록시의 정체, TransactionInterceptor와 PlatformTransactionManager의 JavaDoc, self-invocation이 깨지는 자리, 그리고 가장 큰 오해 한 가지가 풀렸다. Spring은 내 쿼리를 기억하지 않는다. 롤백은 DB의 책임이고 Spring은 시점만 결정한다."
-tags: ["스프링", "@Transactional", "AOP", "프록시", "TransactionInterceptor", "PlatformTransactionManager", "트랜잭션", "우테코"]
+description: "우테코 룸이스케이프 미션에서 서비스에 @Transactional을 막 적용한 직후, 컨테이너 빈을 꺼내봤더니 $SpringCGLIB$0이 붙어 있었다. 거기서부터 AOP가 푸는 자리, 프록시의 정체, TransactionInterceptor와 PlatformTransactionManager의 JavaDoc, ThreadLocal이 한 트랜잭션을 묶는 방식, PROPAGATION의 규칙, self-invocation이 깨지는 자리, 그리고 가장 큰 오해 한 가지가 풀렸다. Spring은 내 쿼리를 기억하지 않는다. 롤백은 DB의 책임이고 Spring은 시점만 결정한다."
+tags: ["스프링", "@Transactional", "AOP", "프록시", "TransactionInterceptor", "PlatformTransactionManager", "ThreadLocal", "Propagation", "트랜잭션", "우테코"]
 ---
 
 ### 시작점, 한 줄짜리 PR 리뷰에서 출발한 정리
@@ -40,28 +40,62 @@ class roomescape.service.ThemeService$$SpringCGLIB$$0
 
 내가 짠 클래스는 `roomescape.service.ThemeService`다. 그런데 컨테이너에서 꺼내보니 같은 이름 뒤에 `$$SpringCGLIB$$0`이 붙어 있다. 이름이 다르면 클래스가 다르고, 클래스가 다르면 객체가 다르다. 컨테이너에 들어 있는 건 내 ThemeService가 *아니라* 그것을 상속한 다른 클래스다.
 
-이 한 줄짜리 출력이 글의 출발점이다. 따라간 질문은 네 개였다.
+이 한 줄짜리 출력이 글의 출발점이다. 따라간 질문은 여섯이었다.
 
-1. 컨테이너가 진짜 객체 대신 *프록시*를 넣어두는 이유는 무엇인가
-2. 가로챈 호출은 누구에게 넘어가는가 (`TransactionInterceptor`)
-3. 그 누군가는 무엇을 부르는가 (`PlatformTransactionManager`)
-4. 롤백할 때 Spring이 내 SQL을 기억해서 반대로 돌리는가
+1. AOP가 정확히 무엇을 풀려고 만들어졌는가, 왜 그게 Spring의 *3대 축* 중 하나로까지 불리는가
+2. 컨테이너가 진짜 객체 대신 *프록시*를 넣어두는 이유와 그 프록시 클래스의 정체
+3. 가로챈 호출은 누구에게 넘어가는가 (`TransactionInterceptor`)
+4. 그 누군가는 무엇을 부르는가 (`PlatformTransactionManager`)
+5. 같은 트랜잭션 안의 여러 SQL이 어떻게 같은 Connection을 쓰는가 (ThreadLocal)
+6. 롤백할 때 Spring이 내 SQL을 기억해서 반대로 돌리는가
 
-네 번째가 가장 헷갈렸다. update 한 줄, insert 두 줄, delete 한 줄이 섞여 있는 트랜잭션을 롤백할 때, 누군가는 그 네 줄을 모두 기억하고 있다가 반대로 실행해야 할 텐데, 그 주체가 Spring인가 DB인가가 잘 그려지지 않았다.
+마지막이 가장 헷갈렸다. update 한 줄, insert 두 줄, delete 한 줄이 섞여 있는 트랜잭션을 롤백할 때, 누군가는 그 네 줄을 모두 기억하고 있다가 반대로 실행해야 할 텐데, 그 주체가 Spring인가 DB인가가 잘 그려지지 않았다.
 
 답을 잡으려고 공식 문서까지 거슬러 올라갔다.
 
-### AOP가 풀려고 했던 자리
+### AOP가 풀려고 했던 자리, Spring의 3대 축이라는 표현
 
-객체지향 프로그래밍은 *수직적 분해*에 강하다. 도메인을 클래스 계층으로 나누고, 책임을 메서드로 분리한다. 그런데 어떤 관심사들은 *수평으로 흐른다*. 클래스 계층과 직교한다.
+토비의 스프링이 자주 쓰는 표현이 있다. *Spring의 3대 축은 IoC/DI, AOP, PSA*. PSA는 Portable Service Abstraction의 약자로, JDBC든 JPA든 JMS든 같은 인터페이스로 다룰 수 있게 추상화한 층을 가리킨다. IoC/DI는 객체 생성과 의존관계 해결을 컨테이너에 맡기는 원칙. 그리고 AOP는 *클래스 계층과 직교하는 관심사*를 따로 분리하는 원칙이다.
 
-- 로깅, 모든 메서드 진입과 종료에 찍고 싶음
-- 트랜잭션, 모든 서비스 메서드를 begin/commit으로 감싸고 싶음
-- 보안, 모든 컨트롤러 메서드 진입 전에 권한 체크하고 싶음
+`@Transactional`은 정확히 이 세 축 위에 동시에 올라타 있다. `PlatformTransactionManager`라는 추상화가 PSA, 그 매니저를 빈으로 등록해 두는 게 IoC/DI, 그 매니저를 *모든 트랜잭션 메서드 앞뒤에 자동으로 끼우는* 메커니즘이 AOP다. 세 축 중 하나가 빠지면 `@Transactional`은 성립하지 않는다.
 
-이걸 OOP만으로 풀면 모든 메서드에 try-catch를 박거나, 상속 트리에 끼워 넣어야 한다. 두 방법 다 어색하다. 횡으로 흐르는 관심사가 종인 클래스 계층과 어긋나기 때문이다.
+그런데 AOP가 처음 와닿지 않았던 이유는, *Around advice가 메서드 앞뒤로 무언가를 끼우는 것*만 보면 그냥 데코레이터 패턴이나 try-catch 블록과 다를 게 없어 보였기 때문이다. 메서드 앞뒤로 코드 넣는 일이라면 자바 기본 문법으로도 충분히 할 수 있다. 그게 왜 *Aspect-Oriented Programming*이라는 거창한 이름까지 받았는가.
 
-AOP (Aspect-Oriented Programming, 관점 지향 프로그래밍)는 이런 *횡단 관심사*를 따로 모으는 패러다임이다. 핵심 용어 다섯 개를 트랜잭션 예시로 정리하면 이렇다.
+답은 *어디에 적용할지를 코드와 분리해서 선언적으로 정한다*는 데 있다. 다음 두 가지를 비교하면 차이가 분명해진다.
+
+**OOP만으로 트랜잭션을 풀면.**
+
+```java
+public Theme save(...) {
+    Connection conn = dataSource.getConnection();
+    conn.setAutoCommit(false);
+    try {
+        Theme theme = doSave(...);   // 실제 저장 로직
+        conn.commit();
+        return theme;
+    } catch (RuntimeException e) {
+        conn.rollback();
+        throw e;
+    } finally {
+        conn.close();
+    }
+}
+```
+
+비즈니스 로직(`doSave`) 한 줄을 부르기 위해 트랜잭션 비계 코드가 그 위아래로 8줄. 게다가 *모든 서비스 메서드*가 똑같은 비계를 반복해야 한다. 비즈니스 코드와 트랜잭션 코드가 코드 상에서 *섞여 있다.*
+
+**AOP를 쓰면.**
+
+```java
+@Transactional
+public Theme save(...) {
+    return doSave(...);
+}
+```
+
+`doSave` 호출 한 줄뿐. 트랜잭션 비계는 *완전히 사라졌다.* `@Transactional`이라는 마커만 남고, 그 마커가 붙은 모든 메서드에 같은 트랜잭션 비계가 자동으로 끼워진다. 비즈니스 코드는 트랜잭션이 있다는 사실을 모르고, 트랜잭션 코드는 그 비즈니스 로직이 무엇인지 모른다. 두 관심사가 *코드 상에서 분리*되어 있다는 점이 AOP의 본질이다.
+
+핵심 용어 다섯 개를 트랜잭션 예시로 정리하면 이렇다.
 
 | 용어 | 의미 | 트랜잭션 예시 |
 |---|---|---|
@@ -71,7 +105,9 @@ AOP (Aspect-Oriented Programming, 관점 지향 프로그래밍)는 이런 *횡�
 | Advice | 해당 지점에서 실행되는 코드 | begin/commit/rollback 로직 |
 | Weaving | aspect를 대상 코드와 엮는 과정 | 빈 생성 시 프록시로 감쌈 |
 
-Advice의 종류는 다섯 가지가 있다. Before, After, AfterReturning, AfterThrowing, Around. `@Transactional`은 가장 강력한 Around에 해당한다. 메서드 실행 *전과 후* 양쪽에 끼어들 수 있고, 예외 처리까지 둘러쌀 수 있다.
+핵심은 **Pointcut**이다. "메서드 앞뒤에 끼운다"는 행위 자체는 OOP로도 가능하지만, "*어떤 메서드들에 끼울지*를 선언적으로 묶어두는 능력"은 AOP의 고유 기능이다. `@Transactional` 어노테이션은 곧 Pointcut 정의 그 자체다. *이 어노테이션이 붙은 메서드*가 곧 트랜잭션 advice의 적용 대상 집합이다.
+
+Advice의 종류는 다섯 가지가 있다. Before, After, AfterReturning, AfterThrowing, Around. `@Transactional`은 가장 강력한 Around에 해당한다. 메서드 실행 *전과 후* 양쪽에 끼어들 수 있고, 예외 처리까지 둘러쌀 수 있다. 트랜잭션은 begin도 끼우고 commit/rollback도 끼워야 하므로 Around 외 다른 advice 타입으로는 표현이 안 된다.
 
 ### Spring AOP는 프록시 기반이다
 
@@ -122,7 +158,9 @@ class UserService$$SpringCGLIB$$0 extends UserService {
 }
 ```
 
-바이트코드 조작으로 *상속한 새 클래스*를 동적 생성한다. 단 `final` 클래스나 `final` 메서드는 못 막는다는 한계가 있다.
+여기서 두 가지 의문이 있었다. 첫째, `UserService$$SpringCGLIB$$0`은 *내부 클래스*인가? 결론은 아니다. 위 코드 블록은 "개념적으로 이런 모양"이라는 의사 코드일 뿐, 실제로는 CGLIB가 *별도의 새 클래스 파일*을 런타임에 바이트코드로 만들어 클래스로더에 올린다. 같은 패키지에 따로 정의되는 *외부 클래스*이고, 단지 컴파일 시점이 아닌 *런타임 시점*에 생성될 뿐이다. 클래스 이름의 `$$`는 자바 소스에서는 등장하기 어려운 문자라 충돌을 피하기 위해 CGLIB이 관례적으로 쓰는 구분자다.
+
+둘째, 그러면 *protected*나 *default(package-private)* 메서드까지 오버라이드할 수 있는가? `public` 메서드는 명확히 오버라이드 가능. `protected`도 같은 패키지/서브클래스 규칙으로 가능. `default`는 *같은 패키지에 한해서만* 오버라이드 가능. 그래서 CGLIB은 일반적으로 원본과 *같은 패키지*에 프록시 클래스를 생성한다. `private` 메서드와 `final` 메서드는 자바 언어 차원에서 오버라이드가 불가능하므로 CGLIB로도 가로챌 수 없다. AOP가 안 먹는 자주 만나는 케이스의 절반이 여기서 나온다.
 
 Spring Boot 2.0부터는 기본이 CGLIB다. 인터페이스 유무와 무관하게 일관되게 동작하기 위해서다. `application.properties`에서 `spring.aop.proxy-target-class=true`가 기본값.
 
@@ -259,11 +297,101 @@ void rollback(TransactionStatus status) throws TransactionException;
 - 내가 시작한 트랜잭션이 아니면 그냥 rollback-only 플래그만 켠다. 실제 롤백은 가장 바깥쪽 호출이 한다.
 - commit이 예외를 던졌으면 다시 rollback을 부르면 안 된다. 이미 정리됐다.
 
-우아한형제들 기술블로그 ["Spring Transaction 마음대로 롤백되네"](https://techblog.woowahan.com/2606/) 글이 이 첫째 줄의 변종을 다룬다. 안쪽 메서드에서 RuntimeException이 났는데 바깥에서 try-catch로 삼킨 케이스다. 안쪽이 이미 트랜잭션을 rollback-only로 마킹한 상태인데 바깥이 정상 commit을 시도하니, 결과적으로 `UnexpectedRollbackException`이 튀어나온다. 본문에 그대로 인용된 표현이 있다.
+이 두 줄이 뒤에서 "Spring Transaction 마음대로 롤백되네" 섹션의 모든 사건을 설명한다.
 
-> "If a participating transaction fails, the transaction will be globally marked as rollback-only."
+`PlatformTransactionManager`의 구현체는 자원 종류에 따라 다르다. JDBC를 직접 쓰면 `DataSourceTransactionManager`, JPA를 쓰면 `JpaTransactionManager`, 분산 트랜잭션이면 `JtaTransactionManager`. 인터페이스는 같고 구현만 갈아끼우면 되니까, 서비스 코드는 자원 종류와 무관하게 같은 모양을 유지한다. 이게 PSA (Portable Service Abstraction)가 작동하는 자리다.
 
-이 동작은 `AbstractPlatformTransactionManager`의 `isGlobalRollbackOnParticipationFailure()`가 기본값 `true`라서 발생한다. 안쪽이 RuntimeException을 던지는 순간 바깥 트랜잭션도 함께 죽기로 예약된다.
+### ThreadLocal, 같은 트랜잭션을 묶는 끈
+
+여기까지 따라오다가 한 가지 의문이 생겼다. *트랜잭션 매니저가 시작한 Connection을 어떻게 비즈니스 코드 안의 JdbcTemplate이 같은 Connection으로 받을까?* 비즈니스 코드에서는 `dataSource.getConnection()`만 부를 텐데, 그게 어떻게 매니저가 들고 있는 그 Connection으로 연결될까?
+
+답은 **ThreadLocal**에 있다.
+
+ThreadLocal은 *스레드 단위의 저장소*다. 일반 변수처럼 보이지만 값은 *각 스레드별로 독립*이다. A 스레드가 ThreadLocal에 `X`를 넣으면 A 스레드에서만 `X`가 보이고, B 스레드는 같은 ThreadLocal을 읽어도 `null`이 나온다.
+
+```java
+private static final ThreadLocal<String> currentUser = new ThreadLocal<>();
+
+// 스레드 A
+currentUser.set("alice");
+currentUser.get();   // "alice"
+
+// 스레드 B (같은 currentUser ThreadLocal)
+currentUser.get();   // null. A가 넣은 값이 B에서는 안 보임
+```
+
+이게 트랜잭션과 무슨 관계인가. 웹 서버는 보통 *요청 한 건당 한 스레드*가 처리한다. 그 스레드가 컨트롤러 → 서비스 → DAO → JDBC로 흘러간다. 그 흐름 전체에서 *같은 Connection*을 써야 같은 트랜잭션 안에 묶인다.
+
+Spring은 이를 위해 `TransactionSynchronizationManager`라는 클래스를 둔다. 내부적으로 ThreadLocal을 여러 개 가지고 있고, 그중 하나가 *현재 스레드에 바인딩된 Connection*을 보관한다.
+
+흐름은 이렇다.
+
+```
+1. TransactionInterceptor가 트랜잭션 시작 결정
+2. DataSourceTransactionManager.doBegin()
+     - DataSource에서 Connection 한 개 꺼냄
+     - conn.setAutoCommit(false)
+     - TransactionSynchronizationManager에 Connection 바인딩 (ThreadLocal에 set)
+
+3. 비즈니스 메서드 실행
+     - JdbcTemplate.update(...)
+         - 내부적으로 DataSourceUtils.getConnection(dataSource) 호출
+         - 이 메서드가 먼저 TransactionSynchronizationManager를 확인
+         - ThreadLocal에 Connection이 바인딩돼 있으면 그것을 재사용
+         - 없으면 DataSource에서 새로 꺼냄
+
+4. 트랜잭션 종료
+     - conn.commit() 또는 conn.rollback()
+     - TransactionSynchronizationManager에서 Connection 언바인딩 (ThreadLocal clear)
+     - Connection을 풀에 반환
+```
+
+핵심은 3단계의 `DataSourceUtils.getConnection`이다. `dataSource.getConnection()`을 *직접* 부르면 매번 새 Connection이 나와서 각각 다른 트랜잭션이 된다. JdbcTemplate은 그렇게 부르지 않는다. `DataSourceUtils.getConnection`을 통해 *ThreadLocal에 이미 묶여 있는지부터 확인*한다. 그래서 같은 요청 처리 스레드 안의 모든 SQL은 자동으로 같은 Connection으로 흘러간다.
+
+ThreadLocal이 없으면 트랜잭션 매니저가 시작한 Connection을 비즈니스 코드 깊은 곳까지 *인자로 전달*해야 한다. 그 전달이 코드 곳곳에 박혀 있던 게 Spring 이전 JDBC 코드의 못생긴 부분이었다. Spring은 ThreadLocal로 그 인자를 *지웠다.*
+
+다만 이 모델에는 분명한 전제가 있다. **한 트랜잭션은 한 스레드 안에서만 살아 있어야 한다.** 트랜잭션 중간에 다른 스레드로 작업을 넘기면 ThreadLocal에 묶인 Connection이 따라가지 않는다. `@Async` 메서드를 트랜잭션 안에서 부르거나 `CompletableFuture`로 작업을 던질 때 트랜잭션이 깨지는 사고가 여기서 자주 난다.
+
+### PROPAGATION, 트랜잭션이 만나면 어떻게 할 것인가
+
+`@Transactional`을 붙인 서비스 메서드가 또 다른 `@Transactional` 서비스 메서드를 호출하는 일은 흔하다. *바깥 메서드*도 트랜잭션, *안쪽 메서드*도 트랜잭션일 때 두 트랜잭션은 어떻게 처리되어야 할까. 한 트랜잭션으로 합쳐야 할까, 분리해야 할까, 안쪽은 트랜잭션이 없는 셈 쳐야 할까. 이 규칙을 **Propagation**이라 한다.
+
+`@Transactional(propagation = ...)`로 지정하고, 기본값은 `REQUIRED`다. 종류는 일곱이다.
+
+| Propagation | 바깥 트랜잭션이 *있을 때* | 바깥 트랜잭션이 *없을 때* |
+|---|---|---|
+| `REQUIRED` (기본) | 그 트랜잭션에 참여 | 새 트랜잭션 시작 |
+| `REQUIRES_NEW` | 바깥을 일시 중단, 새 트랜잭션 시작 | 새 트랜잭션 시작 |
+| `SUPPORTS` | 그 트랜잭션에 참여 | 트랜잭션 없이 실행 |
+| `NOT_SUPPORTED` | 바깥을 일시 중단, 트랜잭션 없이 실행 | 트랜잭션 없이 실행 |
+| `MANDATORY` | 그 트랜잭션에 참여 | 예외 발생 |
+| `NEVER` | 예외 발생 | 트랜잭션 없이 실행 |
+| `NESTED` | 중첩 (savepoint) | 새 트랜잭션 시작 |
+
+실무에서 95%는 `REQUIRED`와 `REQUIRES_NEW` 두 가지다. 차이를 코드로 보면 이렇다.
+
+```java
+@Transactional   // 기본 REQUIRED
+public void outer() {
+    repo.save(...);
+    inner();
+}
+
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void inner() {
+    repo.save(...);
+    throw new RuntimeException();
+}
+```
+
+`outer`가 `inner`를 호출한다고 가정하자. `inner`가 RuntimeException을 던지면.
+
+- **만약 `inner`가 `REQUIRED`였다면**, 둘은 한 트랜잭션이다. 그 한 트랜잭션이 통째로 롤백된다. `outer`에서 했던 `repo.save`도 같이 사라진다.
+- **`inner`가 `REQUIRES_NEW`라면**, 둘은 별개의 트랜잭션이다. `inner`만 롤백되고 `outer`에서 했던 작업은 남는다. 단, `outer`가 그 예외를 잡지 않으면 `outer`도 결국 롤백되긴 한다. 예외를 *try-catch로 잡아서 흡수*해야 `outer`의 작업이 살아남는다.
+
+`REQUIRES_NEW`가 어울리는 자리는 *부수 작업을 본 작업과 분리하고 싶을 때*다. 결제 처리에서 본 거래는 실패해도 *감사 로그*는 남기고 싶다거나, 메일 발송 실패가 주문에 영향을 주면 안 되거나 하는 경우. 이 분리를 안전하게 해 주는 게 `REQUIRES_NEW`다.
+
+`NESTED`는 JDBC savepoint를 사용한 *부분 롤백*인데 일반적인 사용에서는 거의 등장하지 않는다.
 
 ### 호출 한 번이 거치는 전체 흐름
 
@@ -287,23 +415,26 @@ TransactionAspectSupport.invokeWithinTransaction(...)
     │      └─ DataSourceTransactionManager가
     │         DataSource에서 Connection을 꺼내고
     │         conn.setAutoCommit(false)를 호출
-    │         이 Connection을 ThreadLocal에 바인딩
+    │         이 Connection을 ThreadLocal(TransactionSynchronizationManager)에 바인딩
     │
     ├─ 2) try {
     │         target.save(req)   ← 진짜 ThemeService.save() 실행
     │                              안쪽의 JdbcTemplate은
-    │                              ThreadLocal에 바인딩된 같은 Connection을 사용
+    │                              DataSourceUtils.getConnection(dataSource)로
+    │                              ThreadLocal에 묶여 있는 같은 Connection을 꺼내 씀
     │     } catch (ex) {
-    │         완료(완료 = commit 또는 rollback)
+    │         완료 처리 (= commit 또는 rollback)
     │         throw ex
     │     }
     │
     ├─ 3a) 정상 종료: txManager.commit(status)
     │       └─ conn.commit()
+    │       └─ ThreadLocal에서 Connection 언바인딩
     │       └─ 풀에 Connection 반환
     │
     └─ 3b) 예외 + 롤백 대상: txManager.rollback(status)
             └─ conn.rollback()
+            └─ ThreadLocal에서 Connection 언바인딩
             └─ 풀에 Connection 반환
 ```
 
@@ -311,7 +442,7 @@ TransactionAspectSupport.invokeWithinTransaction(...)
 
 ### 가장 큰 오해, Spring은 내 쿼리를 기억하지 않는다
 
-처음 흐릿했던 네 번째 질문의 답이 여기 있다. update 한 줄, insert 두 줄, delete 한 줄이 섞여 있을 때 Spring이 그 네 줄을 어딘가에 보관해 두었다가 반대로 돌리는 일은 *없다*. Spring의 `rollback`은 JDBC 표준 메서드 호출 한 줄이다.
+처음 흐릿했던 여섯 번째 질문의 답이 여기 있다. update 한 줄, insert 두 줄, delete 한 줄이 섞여 있을 때 Spring이 그 네 줄을 어딘가에 보관해 두었다가 반대로 돌리는 일은 *없다*. Spring의 `rollback`은 JDBC 표준 메서드 호출 한 줄이다.
 
 ```java
 // 의사 코드 수준의 단순화
@@ -337,9 +468,90 @@ DB 종류는 달라도 공통점은 분명하다. **"무엇을 어떻게 되돌�
 
 이 세 결정이 `@Transactional`이 하는 일의 전부다. *어떻게* 되돌리는지는 신경 쓰지 않는다. 그건 JDBC 드라이버 너머 DB 엔진의 영역이다.
 
+### "Spring Transaction 마음대로 롤백되네", UnexpectedRollbackException의 사연
+
+PROPAGATION과 rollback-only 규칙이 만나면 신기한 사건이 일어난다. 우아한형제들 기술블로그의 ["Spring Transaction 마음대로 롤백되네"](https://techblog.woowahan.com/2606/) 글이 그 사건을 정면으로 다룬다.
+
+상황을 단순화하면 이렇다. 바깥 서비스 `OrderService.create`가 트랜잭션이고, 그 안에서 안쪽 서비스 `MailService.send`도 트랜잭션이다. 둘 다 기본 `REQUIRED`. 메일 발송이 실패해도 주문 자체는 *살려두고 싶어서* try-catch로 예외를 삼킨다.
+
+```java
+@Transactional
+public void create(Order order) {
+    orderRepository.save(order);
+
+    try {
+        mailService.send(order);   // 안쪽도 @Transactional
+    } catch (Exception e) {
+        log.warn("메일 발송 실패. 주문은 계속 진행", e);
+    }
+}
+```
+
+```java
+@Transactional
+public void send(Order order) {
+    if (somethingWrong()) {
+        throw new RuntimeException("메일 발송 실패");
+    }
+}
+```
+
+직관적으로 보면, 메일 발송이 실패하면 catch로 잡아서 무시했으니 주문은 정상 저장될 것 같다. 그런데 실제로 돌려보면 *바깥에서* 이런 예외가 튀어나온다.
+
+```
+org.springframework.transaction.UnexpectedRollbackException:
+  Transaction rolled back because it has been marked as rollback-only
+```
+
+주문은 commit되지 않았다. 분명히 예외를 잡았는데도 롤백이 일어난 것. 이게 왜 그런가.
+
+순서대로 따라가면 이렇다.
+
+1. `create`가 들어오면서 트랜잭션 시작. 새 Connection이 ThreadLocal에 묶이고 `TransactionStatus.isNewTransaction()` = true.
+2. `orderRepository.save(order)`. 정상 진행.
+3. `mailService.send(order)` 호출. `send`도 `@Transactional`이고 propagation이 `REQUIRED`이므로 *바깥 트랜잭션에 참여*. 새 Connection 안 만들고, 같은 트랜잭션을 그대로 쓴다. 단, 이 호출에서 받은 `TransactionStatus`는 `isNewTransaction()` = false.
+4. `send` 내부에서 RuntimeException 발생.
+5. `send`의 TransactionInterceptor가 롤백 처리. *그런데* `PlatformTransactionManager.rollback`의 JavaDoc이 말한 룰이 여기서 발동한다.
+
+> If the transaction wasn't a new one, just set it rollback-only for proper participation in the surrounding transaction.
+
+`send`는 새 트랜잭션이 아니다. 그래서 실제로 `conn.rollback()`을 부르지 않고, 트랜잭션 객체에 *rollback-only 플래그*만 켠다. 우아한형제들 글이 인용한 표현이 정확히 이 동작이다.
+
+> "If a participating transaction fails, the transaction will be globally marked as rollback-only."
+
+6. `create` 안의 try-catch가 예외를 잡고 흡수. 로그 한 줄만 남기고 정상 흐름으로 복귀.
+7. `create` 정상 종료. TransactionInterceptor가 commit 시도.
+8. `commit`이 트랜잭션 객체를 확인. *rollback-only 플래그가 켜져 있음*. JavaDoc에 따라 commit이 아니라 rollback을 실행. 그리고 `UnexpectedRollbackException`을 던진다.
+
+핵심은 5단계의 *플래그 마킹*이다. 안쪽 메서드는 자기 예외 한 번으로 *바깥 트랜잭션 전체*를 죽이기로 예약해 둔다. 바깥에서 예외를 잡든 안 잡든 상관없다. 이 동작은 `AbstractPlatformTransactionManager`의 `isGlobalRollbackOnParticipationFailure()`가 기본값 `true`라서 그렇다.
+
+해결 방법은 두 가지다.
+
+**1) `REQUIRES_NEW`로 트랜잭션을 분리.**
+
+```java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void send(Order order) { ... }
+```
+
+이렇게 두면 `send`는 *새 트랜잭션*을 시작한다. `isNewTransaction()` = true. 그 안에서 예외가 나면 `send`의 트랜잭션만 자기 Connection에 대고 진짜 `conn.rollback()`을 부르고 끝난다. 바깥 트랜잭션은 영향받지 않는다.
+
+단 ThreadLocal에 묶인 Connection을 *교체*하므로 Connection을 두 개 점유한다. 그리고 `REQUIRES_NEW`는 self-invocation이면 동작하지 않는다 (뒤에 설명).
+
+**2) `noRollbackFor`로 특정 예외를 롤백 대상에서 제외.**
+
+```java
+@Transactional(noRollbackFor = MailException.class)
+public void send(Order order) { ... }
+```
+
+이러면 `MailException`이 나도 `send`의 TransactionInterceptor가 rollback-only 마킹을 *건너뛴다*. 단 이 방법은 *어떤 예외인지를 정확히 알 때*만 안전하다. 모든 예외를 무시하면 진짜로 막아야 할 예외까지 흘러간다.
+
+체크드 vs 언체크드 예외 룰도 여기와 연결된다. 기본 규칙은 *RuntimeException과 Error만 롤백 대상*이다. 체크드 예외 (`SQLException`, `IOException` 등)는 던져져도 rollback-only 마킹이 *되지 않는다*. 이건 EJB 시절부터의 관례를 그대로 가져온 것. 체크드 예외를 롤백 대상으로 만들고 싶으면 `@Transactional(rollbackFor = SomeCheckedException.class)`로 명시한다.
+
 ### 함정, self-invocation
 
-이 그림에 가장 자주 걸리는 함정이 self-invocation이다. 우테코 미션을 정리하면서 직접 실험으로 재현했다.
+같은 클래스 안에서 `this.다른메서드()`로 자기 자신의 트랜잭션 메서드를 부르면, 그 안쪽 트랜잭션은 *적용되지 않는다*. 우테코 미션을 정리하면서 직접 실험으로 재현했다.
 
 한 클래스 안에 `outer()`와 `inner()` 두 트랜잭션 메서드가 있고, `outer()`가 `this.inner()`를 부른다. `inner()`에는 `Propagation.REQUIRES_NEW`를 걸어 두면 새 트랜잭션이 시작되어야 정상이다.
 
@@ -394,123 +606,27 @@ Caller가 부른 첫 메서드는 프록시가 잡는다. 그 프록시가 트�
 
 힙에 있는 두 객체 (프록시, target)는 *완전히 다른 인스턴스*다. 컨테이너에 들어 있는 건 전자, target 안에서 `this`가 가리키는 건 후자. 두 객체는 부모-자식 관계도 아니고, target은 자신을 감싼 프록시의 존재 자체를 모른다. self-invocation이 안 먹는 건 마법이 아니라 자바 객체 참조의 평범한 규칙이다.
 
-### 우회 방법 세 가지
-
-프록시를 명시적으로 거치게 만들면 self-invocation 문제는 사라진다. 같은 클래스에 두 가지 방식을 추가해서 비교 실험을 돌렸다.
-
-```java
-static class SelfInvocationDemo {
-
-    @Autowired
-    private ApplicationContext context;
-
-    @Autowired
-    @Lazy
-    private SelfInvocationDemo lazySelf;
-
-    @Transactional
-    public void outer() {
-        printTxState("outer");
-        this.inner();                              // (1) self-invocation
-    }
-
-    @Transactional
-    public void outerWithLazySelf() {
-        printTxState("outerWithLazySelf");
-        lazySelf.inner();                          // (2) @Lazy로 주입받은 자기 자신 프록시
-    }
-
-    @Transactional
-    public void outerWithContextLookup() {
-        printTxState("outerWithContextLookup");
-        SelfInvocationDemo proxy = context.getBean(SelfInvocationDemo.class);
-        proxy.inner();                             // (3) ApplicationContext에서 직접 lookup
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void inner() {
-        printTxState("inner");
-    }
-}
-```
-
-세 케이스 실행 결과를 한 표로 합치면 이렇다.
-
-| 케이스 | outer transaction name | inner transaction name | inner이 새 트랜잭션? |
-|---|---|---|---|
-| `this.inner()` | `...SelfInvocationDemo.outer` | `...SelfInvocationDemo.outer` | 아니오 |
-| `lazySelf.inner()` | `...SelfInvocationDemo.outerWithLazySelf` | `...SelfInvocationDemo.inner` | 예 |
-| `getBean().inner()` | `...SelfInvocationDemo.outerWithContextLookup` | `...SelfInvocationDemo.inner` | 예 |
-
-(1)에서는 inner의 transaction name이 outer와 같다. propagation이 무시된 증거. (2), (3)에서는 inner의 transaction name이 다르다. 새 트랜잭션이 시작됐다는 증거. 두 우회 방식 모두 프록시를 명시적으로 거치므로 어드바이스가 정상적으로 작동했다.
-
-### @Lazy가 왜 필요한가
-
-처음에는 `@Lazy` 없이 그냥 `@Autowired private SelfInvocationDemo self;`로 자기 자신을 주입하려고 했다. 그러자 ApplicationContext 로드 단계에서 실패했다.
-
-```
-java.lang.IllegalStateException: Failed to load ApplicationContext
-Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException:
-  Error creating bean with name 'demo': Unsatisfied dependency expressed through field 'self':
-  Error creating bean with name 'demo': Requested bean is currently in creation:
-  Is there an unresolvable circular reference or an asynchronous initialization dependency?
-```
-
-Spring Boot 2.6부터 `spring.main.allow-circular-references`의 기본값이 `false`로 바뀌어서, 자기 자신을 주입하는 것조차 순환 참조로 보고 거부한다. `@Lazy`를 붙이면 의존성을 프록시로 감싸 늦게 해결해 주므로 컨테이너 구성 시점에는 순환 참조가 발생하지 않는다. 실제 메서드를 부르는 순간에야 프록시가 실체를 찾아온다. self-injection의 표준 해법이 반드시 `@Lazy`와 짝인 이유가 여기 있다.
-
-### 또 하나의 해법, AspectJ 모드
-
-공식 문서는 세 번째 해법을 따로 짚는다.
-
-> Consider using AspectJ mode (see the `mode` attribute in the following table) if you expect self-invocations to be wrapped with transactions as well. In this case, there is no proxy in the first place. Instead, the target class is woven (that is, its byte code is modified) to support `@Transactional` runtime behavior on any kind of method.
-
-AspectJ 모드는 프록시를 아예 쓰지 않고 클래스 바이트코드 자체를 변경 (weaving)한다. 그러면 `this.method()` 호출도 메서드 진입 시점에 트랜잭션 어드바이스가 끼어드는 형태로 바뀌어서 self-invocation 문제 자체가 사라진다. 일반 프로젝트에서는 빌드 설정 비용이 커서 거의 쓰이지 않고, 왜 self-invocation 우회가 *프록시 모델 자체의 한계*인지를 이해하는 보조 자료로만 쓰면 된다.
-
-### 학습 테스트 셋업 함정
-
-부록 한 가지. self-invocation 테스트를 처음 짤 때 다음과 같이 시작했다.
-
-```java
-@SpringBootTest
-class SelfInvocationStudyTest {
-    @Configuration
-    static class TestConfig {
-        @Bean
-        SelfInvocationDemo demo() { return new SelfInvocationDemo(); }
-    }
-}
-```
-
-이렇게 두면 `static class TestConfig`가 유일한 SpringBootConfiguration으로 잡혀 메인 애플리케이션의 DataSource와 TransactionManager 자동 설정이 누락된다. 모든 케이스가 `active=false`로 떨어져서 self-invocation 문제 자체를 관찰할 수 없는 상태가 된다.
-
-해결은 `@SpringBootTest`에 메인 애플리케이션 클래스를 명시하고 `@Import`로 테스트 전용 빈만 얹는 것.
-
-```java
-@SpringBootTest(classes = RoomescapeApplication.class)
-@Import(SelfInvocationStudyTest.TestConfig.class)
-class SelfInvocationStudyTest { ... }
-```
-
-이러면 메인 컨텍스트 위에 demo 빈만 얹혀 정상적으로 트랜잭션이 활성화된다. 트랜잭션 학습 테스트를 짤 때 내부 컨테이너가 메인 자동 설정을 포함하고 있는지는 함정으로 자주 만난다.
+해법은 결국 *프록시를 명시적으로 거치게 만드는 것*이다. 자기 자신 빈을 `@Lazy`와 함께 주입받아 그걸로 호출하거나, 두 메서드를 *다른 클래스*로 분리하면 풀린다. 분리 쪽이 보통 더 깔끔하다. 같은 클래스 안에서 굳이 자기 자신을 우회하는 코드는 추후에 읽을 때마다 *왜 이렇게 됐지?* 한 번 더 생각하게 만든다.
 
 ### 정리, 일곱 가지 단편
 
-- 컨테이너에 들어가 있는 건 `ThemeService`가 아니라 `ThemeService$$SpringCGLIB$$0`이다. `getBean()`으로 직접 찍어볼 수 있다.
+- `@Transactional`은 Spring의 3대 축(IoC/DI, AOP, PSA) 위에 동시에 올라타 있다. 한 축만 빠져도 성립하지 않는다.
+- AOP의 본질은 *메서드 앞뒤에 코드를 끼우는 것*이 아니라 *어디에 끼울지를 코드와 분리해서 선언적으로 정하는 것*이다. `@Transactional`은 그 자체가 Pointcut 정의다.
+- 컨테이너에 들어가 있는 건 `ThemeService`가 아니라 `ThemeService$$SpringCGLIB$$0`이다. CGLIB이 런타임에 만든 *서브클래스*다. `private`/`final` 메서드는 자바 차원에서 오버라이드가 안 되어 가로채지지 않는다.
 - 프록시와 원본은 힙에서 *다른 객체*다. 원본은 프록시의 `target` 필드로 보관될 뿐이고, target은 자신을 감싼 프록시의 존재 자체를 모른다.
-- 가로챈 호출은 `TransactionInterceptor.invoke`로 들어가 `TransactionAspectSupport.invokeWithinTransaction`이 around-advice 본체를 실행한다.
-- `PlatformTransactionManager`는 메서드가 셋뿐이다. `getTransaction`, `commit`, `rollback`. Spring 1.0보다 앞서 2003-05-16에 자리잡았다.
-- 이 셋의 본체는 JDBC `Connection`의 `setAutoCommit(false)`, `commit()`, `rollback()` 호출이다. Spring은 *시점*만 결정한다.
+- 한 트랜잭션을 묶는 끈은 ThreadLocal이다. `TransactionSynchronizationManager`가 Connection을 거기 묶고, JdbcTemplate은 `DataSourceUtils.getConnection`으로 그 묶인 Connection을 꺼내 쓴다.
+- `PlatformTransactionManager`는 메서드가 셋뿐이다. `getTransaction`, `commit`, `rollback`. 본체는 JDBC `Connection`의 `setAutoCommit(false)`, `commit()`, `rollback()` 호출이다. Spring은 *시점*만 결정한다.
 - **롤백은 Spring이 SQL을 기억하는 게 아니라, DB가 자신의 undo log/MVCC로 처리한다.** Spring 입장에서 rollback은 메서드 호출 한 줄이다.
-- self-invocation이 안 먹는 건 마법이 아니라 자바 객체 참조의 평범한 규칙이다. target 안의 `this`는 프록시가 아니라 자기 자신이다.
 
 ### 다음에 또 헷갈리면 적용할 룰
 
-`@Transactional`이 박힌 클래스를 만질 때 두 질문을 먼저 던진다.
+`@Transactional`이 박힌 클래스를 만질 때 세 질문을 먼저 던진다.
 
 1. 이 호출은 프록시를 거치는가 (외부에서 들어오나, `this.`에서 출발하나)
 2. 이 트랜잭션은 새로 시작되는가, 누군가에 참여하는가 (`Propagation`이 무엇인가)
+3. 이 작업은 *같은 스레드 안*에서 끝나는가 (`@Async`로 다른 스레드에 던지지 않는가)
 
-전자가 "거치지 않는다"면 트랜잭션은 *없다*. 후자가 "참여한다"면 rollback-only 마킹은 그 자리에서 일어나도 실제 종료는 가장 바깥이 한다. 두 질문이 명확해지면 디버깅할 자리가 좁아진다.
+(1)이 "거치지 않는다"면 트랜잭션은 *없다*. (2)가 "참여한다"면 rollback-only 마킹은 그 자리에서 일어나도 실제 종료는 가장 바깥이 한다. (3)이 "다른 스레드로 넘긴다"면 ThreadLocal이 따라가지 않아서 트랜잭션이 깨진다. 세 질문이 명확해지면 디버깅할 자리가 좁아진다.
 
 AOP가 적용된 빈인지 확인하고 싶으면 `service.getClass().getName()`을 찍는다. `$$SpringCGLIB`나 `$Proxy`가 붙어 있으면 프록시가 들어 있는 것. 빈 자체가 프록시가 아니면 `@Transactional`을 아무리 붙여도 동작하지 않는다.
 
