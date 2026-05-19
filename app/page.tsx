@@ -79,7 +79,7 @@ export default function Home() {
             <CategorySection
               key={c.slug}
               category={c.slug as CategorySlug}
-              posts={catPosts.slice(0, 3)}
+              posts={catPosts.slice(0, 4)}
               total={catPosts.length}
             />
           );
