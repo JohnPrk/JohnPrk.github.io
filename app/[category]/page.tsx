@@ -15,7 +15,7 @@ export default function CategoryPage({
   if (!isCategorySlug(params.category)) notFound();
   const posts = getPostsByCategory(params.category);
   return (
-    <div className="mx-auto max-w-2xl md:mr-[260px]">
+    <div className="mx-auto max-w-2xl">
       <div className="glass p-6 md:p-8">
         <header className="mb-2 flex items-end justify-between border-b border-white/10 pb-3">
           <div>

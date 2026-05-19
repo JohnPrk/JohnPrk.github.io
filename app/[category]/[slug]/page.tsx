@@ -20,7 +20,7 @@ export default function PostPage({
   if (!post) notFound();
 
   return (
-    <article className="mx-auto max-w-[760px] md:mr-[260px]">
+    <article className="mx-auto max-w-[760px]">
       <div className="glass px-6 py-8 md:px-10 md:py-10">
         <h1 className="mb-3 text-[28px] font-bold leading-tight tracking-[-0.01em] text-white">
           {post.title}

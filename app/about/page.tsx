@@ -68,7 +68,7 @@ const education = [
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-3xl md:mr-[260px]">
+    <div className="mx-auto max-w-3xl">
       <div className="glass p-6 md:p-8">
       <header className="mb-6 border-b border-white/10 pb-3">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">

@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-10">
       {/* hero (dark glass) */}
-      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/45 shadow-2xl backdrop-blur-xl md:mr-[260px]">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/45 shadow-2xl backdrop-blur-xl">
         <div className="p-7 md:p-10">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-faint">
             yggdrasil · {new Date().getFullYear()}
@@ -72,7 +72,7 @@ export default function Home() {
       </section>
 
       {/* category shelves — 3 per category */}
-      <div className="flex flex-col gap-10 md:mr-[260px]">
+      <div className="flex flex-col gap-10">
         {CATEGORIES.map((c) => {
           const catPosts = getPostsByCategory(c.slug as CategorySlug);
           return (

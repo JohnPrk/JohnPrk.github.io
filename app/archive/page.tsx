@@ -14,7 +14,7 @@ export default function ArchivePage() {
   const years = Array.from(byYear.keys()).sort((a, b) => (a < b ? 1 : -1));
 
   return (
-    <div className="mx-auto max-w-3xl md:mr-[260px]">
+    <div className="mx-auto max-w-3xl">
       <div className="glass p-6 md:p-8">
         <header className="mb-6 flex items-end justify-between border-b border-white/10 pb-3">
           <div>

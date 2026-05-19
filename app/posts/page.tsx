@@ -6,7 +6,7 @@ export const metadata = { title: "posts · johnprk" };
 export default function PostsPage() {
   const posts = getAllPosts().map(({ content, ...meta }) => meta);
   return (
-    <div className="mx-auto max-w-3xl md:mr-[260px]">
+    <div className="mx-auto max-w-3xl">
       <div className="glass p-6 md:p-8">
         <header className="mb-4 flex items-end justify-between border-b border-white/10 pb-3">
           <div>

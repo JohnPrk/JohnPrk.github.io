@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Post } from "@/lib/posts";
 import { categoryLabel } from "@/lib/categories";
-import PostThumb from "./PostThumb";
 
 export default function PostCard({
   post,
@@ -14,21 +13,19 @@ export default function PostCard({
       className="post-card group"
       data-cat={post.category}
     >
-      <div className="post-card-thumb">
-        <PostThumb
-          src={post.thumb}
-          category={post.category}
-          slug={post.slug}
-          title={post.title}
-        />
-        <span className="card-num">#{String(post.num ?? "?").padStart(3, "0")}</span>
-      </div>
+      <div className="post-card-thumb" data-cat={post.category} aria-hidden />
       <div className="flex flex-col gap-1.5 px-0.5">
-        <div className="flex items-center gap-1.5 font-mono text-[11px] text-ink-muted">
+        <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-ink-muted">
           <span className="cat-dot" data-cat={post.category} />
           <span>{categoryLabel(post.category)}</span>
           <span className="text-ink-faint">·</span>
           <time>{post.date}</time>
+          {post.num != null && (
+            <>
+              <span className="text-ink-faint">·</span>
+              <span className="card-num">#{String(post.num).padStart(3, "0")}</span>
+            </>
+          )}
         </div>
         <h3 className="text-[15.5px] font-semibold leading-snug tracking-[-0.005em] text-ink group-hover:underline">
           {post.title}

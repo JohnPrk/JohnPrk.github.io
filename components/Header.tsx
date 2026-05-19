@@ -16,7 +16,7 @@ export default function Header() {
   }, [zen]);
 
   return (
-    <header className="pointer-events-auto fixed top-4 left-4 right-4 z-[9999] flex items-center justify-between rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md transition-colors duration-500 md:mr-[260px] md:p-4">
+    <header className="pointer-events-auto fixed top-4 left-4 right-4 z-[9999] mx-auto flex max-w-5xl items-center justify-between rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md transition-colors duration-500 md:p-4">
       <Link
         href="/"
         className="group zen-hide flex items-baseline gap-2 font-mono text-[15px] font-semibold tracking-tight"
