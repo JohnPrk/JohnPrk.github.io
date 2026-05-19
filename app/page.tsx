@@ -73,13 +73,17 @@ export default function Home() {
 
       {/* category shelves — 3 per category */}
       <div className="flex flex-col gap-10 md:mr-[260px]">
-        {CATEGORIES.map((c) => (
-          <CategorySection
-            key={c.slug}
-            category={c.slug as CategorySlug}
-            posts={getPostsByCategory(c.slug as CategorySlug).slice(0, 3)}
-          />
-        ))}
+        {CATEGORIES.map((c) => {
+          const catPosts = getPostsByCategory(c.slug as CategorySlug);
+          return (
+            <CategorySection
+              key={c.slug}
+              category={c.slug as CategorySlug}
+              posts={catPosts.slice(0, 3)}
+              total={catPosts.length}
+            />
+          );
+        })}
       </div>
     </div>
   );

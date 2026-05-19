@@ -6,9 +6,11 @@ import { categoryLabel, CategorySlug } from "@/lib/categories";
 export default function CategorySection({
   category,
   posts,
+  total,
 }: {
   category: CategorySlug;
   posts: Post[];
+  total?: number;
 }) {
   const dotColor =
     category === "woowacourse"
@@ -33,7 +35,7 @@ export default function CategorySection({
             {categoryLabel(category)}
           </span>
           <span className="text-ink-faint">·</span>
-          <span className="text-ink-faint">{posts.length} posts</span>
+          <span className="text-ink-faint">{total ?? posts.length} posts</span>
         </h2>
         <Link
           href={`/${category}/`}
