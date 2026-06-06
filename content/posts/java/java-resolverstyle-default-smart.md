@@ -1,8 +1,8 @@
 ---
 title: "자바 날짜 파서가 2026-02-31을 조용히 받아주는 이유"
-category: "spring"
+category: "java"
 slug: "java-resolverstyle-default-smart"
-num: 8
+num: 1
 date: 2026-05-18
 description: "DateTimeFormatter.ofPattern의 기본 ResolverStyle은 SMART다. 잘못된 날짜를 조용히 보정한다. STRICT로 거부하려면 패턴도 uuuu로 바꿔야 한다."
 tags: ["java", "DateTimeFormatter", "ResolverStyle", "우테코"]
