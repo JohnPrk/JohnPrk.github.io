@@ -1,10 +1,11 @@
-export type CategorySlug = "woowacourse" | "ai" | "dev" | "spring";
+export type CategorySlug = "woowacourse" | "ai" | "dev" | "spring" | "web";
 
 export const CATEGORIES: { slug: CategorySlug; label: string }[] = [
   { slug: "woowacourse", label: "우테코" },
   { slug: "ai", label: "AI" },
   { slug: "dev", label: "개발" },
   { slug: "spring", label: "스프링" },
+  { slug: "web", label: "웹" },
 ];
 
 export function categoryLabel(slug: string): string {
