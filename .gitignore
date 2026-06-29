@@ -5,3 +5,7 @@ out
 *.log
 .env
 .env.local
+
+# IDE / 빌드 캐시 (로컬 전용, 추적 안 함)
+.idea/
+*.tsbuildinfo
