@@ -18,16 +18,24 @@ export type Post = PostMeta & { content: string };
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 
+function walkMd(dir: string, base: string): { abs: string; rel: string }[] {
+  const out: { abs: string; rel: string }[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const abs = path.join(dir, entry.name);
+    const rel = base ? `${base}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) out.push(...walkMd(abs, rel));
+    else if (entry.isFile() && entry.name.endsWith(".md")) out.push({ abs, rel });
+  }
+  return out;
+}
+
 function readCategory(category: CategorySlug): Post[] {
   const dir = path.join(POSTS_DIR, category);
   if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".md"))
-    .map((f) => {
-      const raw = fs.readFileSync(path.join(dir, f), "utf8");
+  return walkMd(dir, "").map(({ abs, rel }) => {
+      const raw = fs.readFileSync(abs, "utf8");
       const { data, content } = matter(raw);
-      const slug = f.replace(/\.md$/, "");
+      const slug = rel.replace(/\.md$/, "");
       const rawDate = data.date;
       const date =
         rawDate instanceof Date

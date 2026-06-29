@@ -6,17 +6,20 @@ import { getPost, getPostsByCategory } from "@/lib/posts";
 
 export function generateStaticParams() {
   return CATEGORIES.flatMap((c) =>
-    getPostsByCategory(c.slug).map((p) => ({ category: c.slug, slug: p.slug }))
+    getPostsByCategory(c.slug).map((p) => ({
+      category: c.slug,
+      slug: p.slug.split("/"),
+    }))
   );
 }
 
 export default function PostPage({
   params,
 }: {
-  params: { category: string; slug: string };
+  params: { category: string; slug: string[] };
 }) {
   if (!isCategorySlug(params.category)) notFound();
-  const post = getPost(params.category, params.slug);
+  const post = getPost(params.category, params.slug.join("/"));
   if (!post) notFound();
 
   return (

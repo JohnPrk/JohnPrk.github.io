@@ -2,5 +2,13 @@
   {
     "from": "/spring/java-resolverstyle-default-smart/",
     "to": "/java/java-resolverstyle-default-smart/"
+  },
+  {
+    "from": "/token-guardians/why-i-built-it/",
+    "to": "/app/token-guardians/why-i-built-it/"
+  },
+  {
+    "from": "/token-guardians/",
+    "to": "/app/"
   }
 ]

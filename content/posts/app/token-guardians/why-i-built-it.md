@@ -1,7 +1,7 @@
 ---
 title: "남은 토큰이 안 보여서 판다를 만들었다"
-category: "token-guardians"
-slug: "why-i-built-it"
+category: "app"
+slug: "token-guardians/why-i-built-it"
 num: 1
 date: 2026-06-29
 description: "클로드를 쓰다 보면 남은 토큰이 얼마인지 안 보여서 작업이 자꾸 도중에 멈췄다. 그 답답함을 풀려고 남은 토큰을 데스크톱에 늘 띄워주는 작은 판다를 만들기 시작한 이야기. 토큰 지키미 제작기 1편."
