@@ -217,6 +217,7 @@ body {
 .post-card[data-cat="dev"]:hover         { border-color: rgba(5, 150, 105, 0.5); }
 .post-card[data-cat="spring"]:hover      { border-color: rgba(6, 182, 212, 0.5); }
 .post-card[data-cat="app"]:hover { border-color: rgba(236, 72, 153, 0.5); }
+.post-card[data-cat="ai-report"]:hover { border-color: rgba(59, 130, 246, 0.5); }
 
 /* category-colored thin accent strip at the top of each card */
 .post-card-thumb {
@@ -230,6 +231,7 @@ body {
 .post-card-thumb[data-cat="dev"]         { background: linear-gradient(90deg, #059669, #34d399); }
 .post-card-thumb[data-cat="spring"]      { background: linear-gradient(90deg, #06b6d4, #67e8f9); }
 .post-card-thumb[data-cat="app"] { background: linear-gradient(90deg, #ec4899, #f9a8d4); }
+.post-card-thumb[data-cat="ai-report"] { background: linear-gradient(90deg, #3b82f6, #93c5fd); }
 
 .post-card .card-num {
   font-family: "JetBrains Mono", monospace;
@@ -252,6 +254,7 @@ body {
 .cat-dot[data-cat="dev"]         { background: #059669; box-shadow: 0 0 6px #059669; }
 .cat-dot[data-cat="spring"]      { background: #06b6d4; box-shadow: 0 0 6px #06b6d4; }
 .cat-dot[data-cat="app"] { background: #ec4899; box-shadow: 0 0 6px #ec4899; }
+.cat-dot[data-cat="ai-report"] { background: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
 
 /* archive timeline */
 .archive-row {

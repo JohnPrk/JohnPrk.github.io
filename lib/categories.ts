@@ -1,9 +1,10 @@
-export type CategorySlug = "woowacourse" | "ai" | "app" | "dev" | "spring" | "java" | "web";
+export type CategorySlug = "woowacourse" | "ai" | "app" | "ai-report" | "dev" | "spring" | "java" | "web";
 
 export const CATEGORIES: { slug: CategorySlug; label: string }[] = [
   { slug: "woowacourse", label: "우테코" },
   { slug: "ai", label: "AI" },
   { slug: "app", label: "토큰 지키미" },
+  { slug: "ai-report", label: "AI 리포트" },
   { slug: "dev", label: "개발" },
   { slug: "spring", label: "스프링" },
   { slug: "java", label: "자바" },
