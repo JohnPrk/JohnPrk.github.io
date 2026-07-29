@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 300" width="100%" role="img" aria-label="InnoDB 레코드 레이아웃. 원점을 기준으로 왼쪽은 가변길이 배열, NULL 비트맵, 헤더 5바이트 순으로 역방향으로 읽고, 오른쪽은 PK, DB_TRX_ID, DB_ROLL_PTR, 나머지 컬럼 순으로 순방향으로 읽는다.">
+  <style>
+    .bg   { fill: #26282c; }
+    .box  { fill: none; stroke: #d7dae0; stroke-width: 2; }
+    .t    { fill: #e8eaed; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 28px; text-anchor: middle; }
+    .sub  { fill: #9aa0a6; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 16px; text-anchor: middle; }
+    .cap  { fill: #d7dae0; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 23px; text-anchor: middle; }
+    .acc  { fill: #d8a657; }
+    .vio  { fill: #c792ea; }
+    .line { stroke: #d7dae0; stroke-width: 2; fill: none; }
+    .note { fill: #9aa0a6; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 20px; text-anchor: middle; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1240" height="300" rx="10"/>
+
+  <!-- 위쪽 방향 표시 -->
+  <path class="line" d="M 190 34 L 90 34 M 90 34 l 12 -7 M 90 34 l 12 7"/>
+  <text class="cap" x="330" y="41">역방향으로 읽는 머리</text>
+  <path class="line" d="M 470 34 L 570 34 M 570 34 l 0 14"/>
+  <path class="line" d="M 190 34 l 0 14"/>
+
+  <path class="line" d="M 640 34 l 0 14 M 640 34 L 720 34"/>
+  <text class="cap" x="890" y="41">순방향으로 읽는 데이터</text>
+  <path class="line" d="M 1060 34 L 1160 34 M 1160 34 l -12 -7 M 1160 34 l -12 7"/>
+  <path class="line" d="M 1160 34 l 0 14"/>
+
+  <!-- 머리 3조각 -->
+  <rect class="box" x="30"  y="70" width="200" height="96"/>
+  <text class="t"   x="130" y="108">가변길이</text>
+  <text class="t"   x="130" y="140">배열</text>
+
+  <rect class="box" x="230" y="70" width="185" height="96"/>
+  <text class="t vio" x="322" y="108">NULL</text>
+  <text class="t"     x="322" y="140">비트맵</text>
+
+  <rect class="box" x="415" y="70" width="185" height="96"/>
+  <text class="t"   x="507" y="124">헤더 <tspan class="acc">5B</tspan></text>
+
+  <!-- 데이터 -->
+  <rect class="box" x="625" y="70" width="105" height="96"/>
+  <text class="t"   x="677" y="124">PK</text>
+
+  <rect class="box" x="730" y="70" width="180" height="96"/>
+  <text class="t"   x="820" y="108">DB_TRX_ID</text>
+  <text class="t acc" x="820" y="140">6B</text>
+
+  <rect class="box" x="910" y="70" width="205" height="96"/>
+  <text class="t"   x="1012" y="108">DB_ROLL_PTR</text>
+  <text class="t acc" x="1012" y="140">7B</text>
+
+  <rect class="box" x="1115" y="70" width="95" height="96"/>
+  <text class="t"   x="1162" y="108">나머지</text>
+  <text class="t"   x="1162" y="140">컬럼</text>
+
+  <!-- 원점 -->
+  <path d="M 612 196 l 10 16 l -20 0 z" fill="#e8eaed"/>
+  <text class="t" x="612" y="242">원점</text>
+
+  <text class="note" x="620" y="284">원점은 그 레코드에서 데이터가 시작하는 지점이고, 페이지 안에서의 바이트 번호로 나타난다</text>
+</svg>
